@@ -1,0 +1,33 @@
+import "dotenv/config";
+import { z } from "zod";
+
+const configSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  PORT: z.coerce.number().int().positive().default(8787),
+  HOST: z.string().default("127.0.0.1"),
+  DATABASE_PATH: z.string().default("./data/codex-app-server.sqlite"),
+  TOKEN_PEPPER: z.string().min(1).default("change-me-to-a-long-random-secret"),
+  BOOTSTRAP_ADMIN_TOKEN: z.string().optional()
+}).superRefine((config, ctx) => {
+  if (config.NODE_ENV === "production" && config.TOKEN_PEPPER === "change-me-to-a-long-random-secret") {
+    ctx.addIssue({
+      code: "custom",
+      path: ["TOKEN_PEPPER"],
+      message: "TOKEN_PEPPER must be changed in production"
+    });
+  }
+
+  if (config.NODE_ENV === "production" && config.BOOTSTRAP_ADMIN_TOKEN) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["BOOTSTRAP_ADMIN_TOKEN"],
+      message: "BOOTSTRAP_ADMIN_TOKEN must not be configured in production"
+    });
+  }
+});
+
+export type AppConfig = z.infer<typeof configSchema>;
+
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
+  return configSchema.parse(env);
+}
