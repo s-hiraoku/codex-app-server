@@ -10,7 +10,7 @@ OpenAI's Codex App Server WebSocket transport is documented as experimental and 
 
 Requirements:
 
-- Node.js 18 or newer
+- Node.js 24
 - npm
 
 Install dependencies:

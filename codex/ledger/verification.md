@@ -89,3 +89,10 @@ Use this file to record meaningful verification runs.
 - Scope: Local development server smoke test
 - Result: Passed
 - Notes: Server returned `{"ok":true}`. Dev process was stopped after the smoke test.
+
+### 2026-05-05 11:41
+
+- Command: `scripts/verify.sh`
+- Scope: Node 24 runtime requirement update
+- Result: Passed
+- Notes: Ran lint, typecheck, 26 Vitest tests, and build with local Node `v24.12.0`.
