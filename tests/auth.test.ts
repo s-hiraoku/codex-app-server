@@ -16,7 +16,7 @@ describe("auth", () => {
   });
 
   it("rejects missing token with 401", async () => {
-    const { app } = makeTestApp();
+    const { app, db } = makeTestApp();
 
     const response = await app.inject({
       method: "GET",
@@ -25,6 +25,19 @@ describe("auth", () => {
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({ error: { code: "UNAUTHORIZED", message: "Unauthorized" } });
+
+    const row = db.prepare("SELECT token_id, token_name, status, error FROM audit_logs").get() as {
+      token_id: string | null;
+      token_name: string | null;
+      status: string;
+      error: string;
+    };
+    expect(row).toEqual({
+      token_id: null,
+      token_name: null,
+      status: "failure",
+      error: "UNAUTHORIZED"
+    });
   });
 
   it("rejects invalid token with 401", async () => {

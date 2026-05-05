@@ -13,4 +13,16 @@ describe("health", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ ok: true });
   });
+
+  it("returns ok without auth with a trailing slash", async () => {
+    const { app } = makeTestApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/healthz/"
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ ok: true });
+  });
 });

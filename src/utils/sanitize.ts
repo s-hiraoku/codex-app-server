@@ -1,8 +1,7 @@
 const ABSOLUTE_PATH_PATTERNS = [
-  /\/Volumes\/[^\s"'`<>]+/g,
-  /\/Users\/[^\s"'`<>]+/g,
-  /\/private\/[^\s"'`<>]+/g,
-  /\/tmp\/[^\s"'`<>]+/g
+  /\\\\[^\s\\/"'`<>]+\\[^\s"'`<>]+/g,
+  /\b[A-Za-z]:[\\/][^\s"'`<>]+/g,
+  /(?<![:\w])\/(?:Volumes|Users|home|workspace|workspaces|private|tmp|var|opt|srv|mnt|media|root|app|repo|project|builds|runner|github)\/[^\s"'`<>]+/g
 ];
 
 export function sanitizePublicText(text: string): string {

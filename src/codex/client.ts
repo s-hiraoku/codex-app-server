@@ -90,10 +90,24 @@ export class CodexClient implements CodexRunner {
         summary: sanitizePublicText(turn.finalResponse),
         changedFiles: extractChangedFiles(turn.items, params.cwd)
       };
-    } catch {
-      throw new ApiError("CODEX_NOT_CONFIGURED", "Codex task execution is not available");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(
+        isCodexConfigurationError(error) ? "CODEX_NOT_CONFIGURED" : "CODEX_EXECUTION_FAILED",
+        isCodexConfigurationError(error) ? "Codex task execution is not available" : "Codex task execution failed"
+      );
     }
   }
+}
+
+function isCodexConfigurationError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /\b(auth|authenticate|authentication|credential|login|api key|not configured)\b/i.test(error.message);
 }
 
 function defaultCodexOptions(): CodexOptions {

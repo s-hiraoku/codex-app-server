@@ -37,7 +37,7 @@ export function buildApp(deps: AppDeps) {
   const authenticate = authMiddleware(db, deps.config);
 
   app.setNotFoundHandler(async (request, reply) => {
-    if (request.url === "/healthz") {
+    if (request.url === "/healthz" || request.url === "/healthz/") {
       return reply.status(404).send({
         error: {
           code: "NOT_FOUND",

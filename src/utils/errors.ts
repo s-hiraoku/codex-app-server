@@ -11,6 +11,7 @@ export const ERROR_CODES = [
   "REPO_NOT_ALLOWED",
   "MODE_NOT_ALLOWED",
   "CODEX_NOT_CONFIGURED",
+  "CODEX_EXECUTION_FAILED",
   "INTERNAL_ERROR"
 ] as const;
 
@@ -26,6 +27,7 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   REPO_NOT_ALLOWED: 403,
   MODE_NOT_ALLOWED: 403,
   CODEX_NOT_CONFIGURED: 501,
+  CODEX_EXECUTION_FAILED: 500,
   INTERNAL_ERROR: 500
 };
 
@@ -61,6 +63,8 @@ export function defaultMessage(code: ErrorCode): string {
       return "Mode is not allowed";
     case "CODEX_NOT_CONFIGURED":
       return "Codex is not configured";
+    case "CODEX_EXECUTION_FAILED":
+      return "Codex task execution failed";
     case "INTERNAL_ERROR":
       return "Internal error";
   }

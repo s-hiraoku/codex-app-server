@@ -39,6 +39,12 @@ Before finalizing meaningful changes, run the relevant checks:
 
 Record important verification runs in `codex/ledger/verification.md` when work spans multiple sessions.
 
+## Pull Requests
+
+- Create normal, review-ready pull requests by default.
+- Do not create draft pull requests unless the user explicitly asks for a draft.
+- This keeps Codex automatic code review eligible to run when a pull request is opened.
+
 ## Final Response
 
 Summarize changed files, verification results, remaining risks, and follow-up work. Do not claim a check passed unless the command completed successfully.

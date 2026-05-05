@@ -8,10 +8,6 @@ function defaultAction(request: FastifyRequest): string {
 
 export function writeAuditLog(db: Db, request: FastifyRequest, reply: FastifyReply): void {
   const auth = request.auth;
-  if (!auth) {
-    return;
-  }
-
   const audit = request.audit ?? {};
   const status = reply.statusCode >= 400 ? "failure" : "success";
   db.prepare(
@@ -25,8 +21,8 @@ export function writeAuditLog(db: Db, request: FastifyRequest, reply: FastifyRep
   ).run({
     id: makeId("aud"),
     timestamp: nowIso(),
-    tokenId: auth.id,
-    tokenName: auth.name,
+    tokenId: auth?.id ?? null,
+    tokenName: auth?.name ?? null,
     clientIp: request.ip ?? null,
     userAgent: request.headers["user-agent"] ?? null,
     action: audit.action ?? defaultAction(request),
