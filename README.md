@@ -6,6 +6,10 @@ The gateway is the only HTTP API that should be exposed outside the machine. Cod
 
 OpenAI's Codex App Server WebSocket transport is documented as experimental and unsupported, and non-loopback WebSocket listeners require explicit auth before remote exposure. This project therefore keeps App Server private and exposes only this authenticated Gateway API.
 
+## User Guide
+
+The GitHub Pages-ready user guide lives in [`docs/index.md`](docs/index.md). Configure GitHub Pages to deploy from the `/docs` folder to publish it.
+
 ## Development
 
 Requirements:
