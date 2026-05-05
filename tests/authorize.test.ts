@@ -1,0 +1,112 @@
+import { describe, expect, it } from "vitest";
+import { authHeader, issueToken, makeTestApp } from "./helpers.js";
+
+describe("authorization", () => {
+  it("passes when required scopes are present", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Summarize README",
+        mode: "read-only"
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("rejects task create without task:create", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["repo:codex-app-server", "mode:read-only"]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Summarize README",
+        mode: "read-only"
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+  });
+
+  it("rejects task create without repo scope", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["task:create", "mode:read-only"]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Summarize README",
+        mode: "read-only"
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+  });
+
+  it("rejects workspace-write without workspace-write mode scope", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Implement a change",
+        mode: "workspace-write"
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+  });
+
+  it("prevents token:create from minting scopes the caller lacks", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["token:create", "task:read"]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/tokens",
+      headers: authHeader(token.token),
+      payload: {
+        name: "escalation",
+        scopes: ["task:read", "mode:workspace-write"],
+        expiresInDays: 30
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+  });
+
+  it("prevents child tokens from outliving their issuer", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["token:create", "task:read"], { expiresInDays: 1 });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/tokens",
+      headers: authHeader(token.token),
+      payload: {
+        name: "too-long",
+        scopes: ["task:read"],
+        expiresInDays: 30
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+  });
+});
