@@ -29,7 +29,21 @@ Copy environment defaults:
 cp .env.example .env
 ```
 
-Set a long random `TOKEN_PEPPER`. `BOOTSTRAP_ADMIN_TOKEN` is only for local bootstrap and is refused in production. By default the gateway starts `codex app-server` using `CODEX_APP_SERVER_COMMAND=codex`.
+Set `CODEXGW_ALLOWED_REPOS_JSON` to the repos this gateway may operate on, and set a long random `TOKEN_PEPPER`. `BOOTSTRAP_ADMIN_TOKEN` is only for local bootstrap and is refused in production.
+By default the gateway starts `codex app-server` using `CODEX_APP_SERVER_COMMAND=codex`.
+
+Example repo allowlist:
+
+```json
+[
+  {
+    "id": "codex-app-server",
+    "path": "/absolute/path/to/codex-app-server",
+    "defaultMode": "read-only",
+    "allowedModes": ["read-only", "workspace-write"]
+  }
+]
+```
 
 Run checks:
 
@@ -119,7 +133,7 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
 ## Security
 
 - No raw `cwd` API.
-- Repositories resolve only through the server-side allowlist in `src/policy/repos.ts`.
+- Repositories resolve only through the server-side allowlist in `CODEXGW_ALLOWED_REPOS_JSON`; production startup refuses a missing allowlist.
 - Default task mode is `read-only`.
 - Public task modes are only `read-only` and `workspace-write`.
 - Per-repo mode ceilings prevent sensitive repos from being made writeable by scope composition alone.
@@ -129,7 +143,7 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
 - Authorization headers are redacted from logs.
 - Prompt hashes are stored for audit; prompt previews are truncated and never store a short prompt in full.
 - Responses and stored task output are scrubbed for common local absolute path patterns.
-- Production config rejects the default pepper and rejects bootstrap admin token configuration.
+- Production config rejects the default pepper, rejects bootstrap admin token configuration, and requires an explicit repo allowlist.
 - Codex App Server is called through an internal stdio JSON-RPC transport with fixed server-side options: allowlisted working directory, fixed sandbox policy, `approvalPolicy: "never"`, and no network access.
 - Task runs use isolated App Server stdio connections so streamed turn events cannot cross between concurrent Gateway requests.
 - The gateway does not expose a generic App Server JSON-RPC proxy, App Server filesystem APIs, command APIs, or `thread/shellCommand`.

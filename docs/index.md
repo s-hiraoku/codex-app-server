@@ -56,8 +56,22 @@ cp .env.example .env
 | `APP_BACKEND` | 実行バックエンド。既定は `codex-app-server`。 |
 | `CODEX_APP_SERVER_COMMAND` | 起動する Codex CLI コマンド。既定は `codex`。 |
 | `CODEX_APP_SERVER_TURN_TIMEOUT_MS` | App Server の turn 完了待ちタイムアウト。 |
+| `CODEXGW_ALLOWED_REPOS_JSON` | Gateway が操作できるリポジトリ allowlist。production では必須。 |
 | `TOKEN_PEPPER` | トークンハッシュ用の長いランダム秘密値。production では既定値不可。 |
 | `BOOTSTRAP_ADMIN_TOKEN` | 初回トークン作成用の一時管理トークン。production では設定不可。 |
+
+`CODEXGW_ALLOWED_REPOS_JSON` は JSON 配列で設定します。`id` は API や `repo:<repoId>` スコープに出る公開名、`path` はサーバー内だけで使う絶対パスです。
+
+```json
+[
+  {
+    "id": "codex-app-server",
+    "path": "/absolute/path/to/codex-app-server",
+    "defaultMode": "read-only",
+    "allowedModes": ["read-only", "workspace-write"]
+  }
+]
+```
 
 開発サーバーを起動します。
 
@@ -287,6 +301,7 @@ curl -X DELETE http://127.0.0.1:8787/v1/tokens/tok_... \
 
 - production では `TOKEN_PEPPER` を長いランダム値に変更する。
 - production では `BOOTSTRAP_ADMIN_TOKEN` を設定しない。
+- production では `CODEXGW_ALLOWED_REPOS_JSON` に公開してよい `repoId` とサーバー内の実パスを明示する。
 - 外部公開時は API の前段に認証・アクセス制御レイヤーを置く。
 - トークンは用途ごとに短い有効期限と最小スコープで発行する。
 - `workspace-write` は必要なクライアントだけに付与する。

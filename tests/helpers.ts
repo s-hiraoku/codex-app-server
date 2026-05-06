@@ -13,6 +13,7 @@ export const TEST_CONFIG: AppConfig = {
   APP_BACKEND: "codex-app-server",
   CODEX_APP_SERVER_COMMAND: "codex",
   CODEX_APP_SERVER_TURN_TIMEOUT_MS: 1_000,
+  CODEXGW_ALLOWED_REPOS_JSON: undefined,
   TOKEN_PEPPER: "test-pepper",
   BOOTSTRAP_ADMIN_TOKEN: "bootstrap-secret"
 };

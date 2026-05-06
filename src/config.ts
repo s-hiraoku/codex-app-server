@@ -9,6 +9,7 @@ const configSchema = z.object({
   APP_BACKEND: z.enum(["codex-app-server"]).default("codex-app-server"),
   CODEX_APP_SERVER_COMMAND: z.string().min(1).default("codex"),
   CODEX_APP_SERVER_TURN_TIMEOUT_MS: z.coerce.number().int().positive().default(10 * 60 * 1000),
+  CODEXGW_ALLOWED_REPOS_JSON: z.string().optional(),
   TOKEN_PEPPER: z.string().min(1).default("change-me-to-a-long-random-secret"),
   BOOTSTRAP_ADMIN_TOKEN: z.string().optional()
 }).superRefine((config, ctx) => {
@@ -25,6 +26,14 @@ const configSchema = z.object({
       code: "custom",
       path: ["BOOTSTRAP_ADMIN_TOKEN"],
       message: "BOOTSTRAP_ADMIN_TOKEN must not be configured in production"
+    });
+  }
+
+  if (config.NODE_ENV === "production" && !config.CODEXGW_ALLOWED_REPOS_JSON?.trim()) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["CODEXGW_ALLOWED_REPOS_JSON"],
+      message: "CODEXGW_ALLOWED_REPOS_JSON must be configured in production"
     });
   }
 });

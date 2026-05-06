@@ -82,7 +82,7 @@ describe("policy", () => {
     const { app, db } = makeTestApp();
     const token = issueToken(db, [
       "task:create",
-      "repo:operation-memory",
+      "repo:readonly-example",
       "mode:read-only",
       "mode:workspace-write"
     ]);
@@ -92,7 +92,7 @@ describe("policy", () => {
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "operation-memory",
+        repo: "readonly-example",
         prompt: "Summarize",
         mode: "workspace-write"
       }
