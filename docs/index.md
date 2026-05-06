@@ -67,17 +67,20 @@ curl http://127.0.0.1:8787/healthz
 
 ## 初回トークン作成
 
-初回だけ `BOOTSTRAP_ADMIN_TOKEN` を使って通常の API トークンを作成します。
+初回だけ `BOOTSTRAP_ADMIN_TOKEN` を使って管理用 API トークンを作成します。このトークンに `token:*` スコープを含めておくと、`BOOTSTRAP_ADMIN_TOKEN` を削除した後も通常のトークン管理 API を使えます。
 
 ```bash
 curl -X POST http://127.0.0.1:8787/v1/tokens \
   -H "Authorization: Bearer $BOOTSTRAP_ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "raycast",
+    "name": "admin",
     "scopes": [
       "task:create",
       "task:read",
+      "token:create",
+      "token:read",
+      "token:revoke",
       "repo:codex-app-server",
       "mode:read-only",
       "mode:workspace-write"
@@ -149,13 +152,13 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
 ```json
 {
   "taskId": "task_...",
-  "status": "running",
+  "status": "completed",
   "repo": "codex-app-server",
   "mode": "read-only",
-  "summary": null,
+  "summary": "task completed",
   "changedFiles": [],
   "createdAt": "2026-05-05T00:00:00.000Z",
-  "completedAt": null,
+  "completedAt": "2026-05-05T00:00:05.000Z",
   "error": null
 }
 ```

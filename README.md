@@ -55,19 +55,22 @@ curl http://127.0.0.1:8787/healthz
 
 ## Bootstrap
 
-Set `BOOTSTRAP_ADMIN_TOKEN` temporarily, start the server, and create a real admin or app token:
+Set `BOOTSTRAP_ADMIN_TOKEN` temporarily, start the server, and create a real admin token. Include the `token:*` scopes if this token will create, list, or revoke other tokens after bootstrap:
 
 ```bash
 curl -X POST http://127.0.0.1:8787/v1/tokens \
   -H "Authorization: Bearer $BOOTSTRAP_ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "raycast",
+    "name": "admin",
     "scopes": [
       "task:create",
       "task:read",
       "thread:create",
       "thread:write",
+      "token:create",
+      "token:read",
+      "token:revoke",
       "repo:codex-app-server",
       "mode:read-only",
       "mode:workspace-write"
