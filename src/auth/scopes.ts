@@ -8,7 +8,10 @@ export const STATIC_SCOPES = [
   "thread:write",
   "token:create",
   "token:read",
-  "token:revoke"
+  "token:revoke",
+  "codex:account:read",
+  "codex:account:login",
+  "codex:account:logout"
 ] as const;
 
 export type StaticScope = (typeof STATIC_SCOPES)[number];

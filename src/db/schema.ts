@@ -13,6 +13,8 @@ export type ApiTokenRecord = {
 export type TaskRecord = {
   id: string;
   tokenId: string;
+  provider: string;
+  backend: string;
   repo: string;
   mode: string;
   threadId: string | null;

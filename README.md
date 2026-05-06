@@ -2,9 +2,9 @@
 
 Personal Codex Gateway API Server for safely delegating work from external tools to local Codex workflows.
 
-The gateway is the only HTTP API that should be exposed outside the machine. Codex App Server, Codex SDK internals, repository paths, raw `cwd` values, and dangerous execution modes stay behind server-side policy.
+The gateway is the only HTTP API that should be exposed outside the machine. Codex App Server internals, repository paths, raw `cwd` values, and dangerous execution modes stay behind server-side policy.
 
-OpenAI's Codex App Server WebSocket transport is documented as experimental and unsupported, and non-loopback WebSocket listeners require explicit auth before remote exposure. This project therefore keeps App Server private and exposes only this authenticated Gateway API.
+OpenAI's Codex App Server WebSocket transport is documented as experimental and unsupported, and non-loopback WebSocket listeners require explicit auth before remote exposure. This project therefore runs App Server as a private internal process over stdio and exposes only this authenticated Gateway API.
 
 ## User Guide
 
@@ -29,7 +29,7 @@ Copy environment defaults:
 cp .env.example .env
 ```
 
-Set a long random `TOKEN_PEPPER`. `BOOTSTRAP_ADMIN_TOKEN` is only for local bootstrap and is refused in production.
+Set a long random `TOKEN_PEPPER`. `BOOTSTRAP_ADMIN_TOKEN` is only for local bootstrap and is refused in production. By default the gateway starts `codex app-server` using `CODEX_APP_SERVER_COMMAND=codex`.
 
 Run checks:
 
@@ -71,6 +71,9 @@ curl -X POST http://127.0.0.1:8787/v1/tokens \
       "token:create",
       "token:read",
       "token:revoke",
+      "codex:account:read",
+      "codex:account:login",
+      "codex:account:logout",
       "repo:codex-app-server",
       "mode:read-only",
       "mode:workspace-write"
@@ -93,6 +96,10 @@ Authenticated:
 - `POST /v1/tokens` requires `token:create`; tokens cannot mint scopes they do not already have, and child tokens cannot outlive their issuer.
 - `GET /v1/tokens` requires `token:read`; never returns raw tokens or token hashes.
 - `DELETE /v1/tokens/:id` requires `token:revoke`; revokes without physical deletion.
+- `GET /v1/codex/account` requires `codex:account:read`; returns sanitized Codex account state.
+- `POST /v1/codex/account/login/device-code` requires `codex:account:login`; starts ChatGPT device-code login and returns only `loginId`, `verificationUrl`, and `userCode`.
+- `POST /v1/codex/account/login/cancel` requires `codex:account:login`; cancels a pending device-code login by `loginId`.
+- `POST /v1/codex/account/logout` requires `codex:account:logout`; signs Codex out through App Server.
 - `POST /v1/tasks` requires `task:create`, `repo:<repoId>`, and `mode:<mode>`.
 - `GET /v1/tasks/:id` requires `task:read` and either task ownership or matching repo scope.
 
@@ -123,7 +130,10 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
 - Prompt hashes are stored for audit; prompt previews are truncated and never store a short prompt in full.
 - Responses and stored task output are scrubbed for common local absolute path patterns.
 - Production config rejects the default pepper and rejects bootstrap admin token configuration.
-- Codex SDK is called with fixed server-side options: allowlisted working directory, fixed sandbox mode, `approvalPolicy: "never"`, no network access, and web search disabled.
+- Codex App Server is called through an internal stdio JSON-RPC transport with fixed server-side options: allowlisted working directory, fixed sandbox policy, `approvalPolicy: "never"`, and no network access.
+- Task runs use isolated App Server stdio connections so streamed turn events cannot cross between concurrent Gateway requests.
+- The gateway does not expose a generic App Server JSON-RPC proxy, App Server filesystem APIs, command APIs, or `thread/shellCommand`.
+- OpenAI API keys and ChatGPT access tokens are not accepted through public Gateway request bodies.
 - Public task responses expose Gateway `taskId` only, not Codex thread IDs.
 
 Prefer publishing through Tailscale, Cloudflare Tunnel, or another identity-aware private access layer. Opening a home Mac port directly to the internet is not recommended.

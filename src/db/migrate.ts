@@ -20,6 +20,8 @@ export function migrate(db: Db): void {
     CREATE TABLE IF NOT EXISTS tasks (
       id TEXT PRIMARY KEY,
       token_id TEXT NOT NULL,
+      provider TEXT NOT NULL DEFAULT 'codex',
+      backend TEXT NOT NULL DEFAULT 'app-server',
       repo TEXT NOT NULL,
       mode TEXT NOT NULL,
       thread_id TEXT,
@@ -60,4 +62,15 @@ export function migrate(db: Db): void {
     CREATE INDEX IF NOT EXISTS idx_audit_logs_task_id
       ON audit_logs(task_id);
   `);
+
+  addColumnIfMissing(db, "tasks", "provider", "TEXT NOT NULL DEFAULT 'codex'");
+  addColumnIfMissing(db, "tasks", "backend", "TEXT NOT NULL DEFAULT 'app-server'");
+}
+
+function addColumnIfMissing(db: Db, table: string, column: string, definition: string): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (columns.some((existing) => existing.name === column)) {
+    return;
+  }
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
 }
