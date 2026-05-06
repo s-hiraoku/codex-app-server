@@ -8,7 +8,7 @@ OpenAI's Codex App Server WebSocket transport is documented as experimental and 
 
 ## User Guide
 
-The GitHub Pages-ready user guide lives in [`docs/index.md`](docs/index.md). Configure GitHub Pages to deploy from the `/docs` folder to publish it.
+The GitHub Pages-ready user guide lives in [`docs/index.md`](docs/index.md). Pages is deployed by `.github/workflows/pages.yml` whenever `main` changes the docs or the workflow.
 
 ## Development
 

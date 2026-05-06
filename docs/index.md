@@ -310,12 +310,12 @@ curl -X DELETE http://127.0.0.1:8787/v1/tokens/tok_... \
 
 ## GitHub Pages で公開する
 
-このリポジトリは `docs/` 配下を GitHub Pages のソースにできます。
+このリポジトリは GitHub Actions で `docs/` 配下の Jekyll site をビルドし、GitHub Pages に公開します。
 
 1. GitHub の repository settings を開く。
 2. `Pages` を開く。
-3. `Build and deployment` の source で `Deploy from a branch` を選ぶ。
-4. Branch に公開対象ブランチ、folder に `/docs` を選ぶ。
-5. 保存後、表示された Pages URL にアクセスする。
+3. `Build and deployment` の source が `GitHub Actions` になっていることを確認する。
+4. `main` に docs または `.github/workflows/pages.yml` の変更を push する。
+5. `Deploy GitHub Pages` workflow の完了後、表示された Pages URL にアクセスする。
 
-このガイドは Jekyll の既定処理で Markdown から HTML に変換されます。
+このガイドは workflow 内の Jekyll build で Markdown から HTML に変換されます。
