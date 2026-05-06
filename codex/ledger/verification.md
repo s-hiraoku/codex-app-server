@@ -96,3 +96,59 @@ Use this file to record meaningful verification runs.
 - Scope: Node 24 runtime requirement update
 - Result: Passed
 - Notes: Ran lint, typecheck, 26 Vitest tests, and build with local Node `v24.12.0`.
+
+### 2026-05-06 11:00
+
+- Command: `scripts/verify.sh`
+- Scope: Codex App Server backend migration and account auth routes
+- Result: Passed
+- Notes: Ran lint, typecheck, 34 Vitest tests, and build after adding stdio JSON-RPC App Server adapter, scoped account routes, and provider/backend task metadata.
+
+### 2026-05-06 11:10
+
+- Command: `./node_modules/.bin/codex app-server generate-ts --out /private/tmp/codex-app-server-schema`
+- Scope: Local Codex App Server protocol schema check
+- Result: Passed
+- Notes: Confirmed app-server protocol generation works for local `codex-cli 0.128.0`; adjusted sandbox and params wire shapes to generated schema.
+
+### 2026-05-06 11:10
+
+- Command: `node --input-type=module -e '<app-server initialize/account-read smoke test>'`
+- Scope: Real local Codex App Server stdio smoke test
+- Result: Passed
+- Notes: Spawned local app-server, completed `initialize`/`initialized`, and verified `account/read` returns an object without printing account details.
+
+### 2026-05-06 11:11
+
+- Command: `node --input-type=module -e '<app-server thread/turn smoke test>'`
+- Scope: Real local Codex App Server turn execution smoke test
+- Result: Passed
+- Notes: First sandboxed attempt could not access `~/.codex/sessions`; reran outside the sandbox with approval, then completed `thread/start`, `turn/start`, and `turn/completed` with read-only sandbox policy.
+
+### 2026-05-06 11:10
+
+- Command: `scripts/verify.sh`
+- Scope: App Server schema alignment and per-task connection update
+- Result: Passed
+- Notes: Ran lint, typecheck, 34 Vitest tests, and build after changing task runs to isolated App Server stdio connections.
+
+### 2026-05-06 11:41
+
+- Command: `scripts/verify.sh`
+- Scope: PR #3 rebase onto updated `origin/main`
+- Result: Passed
+- Notes: Ran lint, typecheck, 34 Vitest tests, and build after resolving README conflict and preserving user guide plus token/account bootstrap scopes.
+
+### 2026-05-06 11:42
+
+- Command: `scripts/verify.sh`
+- Scope: PR #3 guardian feedback fix
+- Result: Passed
+- Notes: Ran lint, typecheck, 35 Vitest tests, and build after adding immediate JSON-RPC error responses for unsupported app-server initiated requests.
+
+### 2026-05-06 11:48
+
+- Command: `scripts/verify.sh`
+- Scope: Documentation coverage for Codex App Server account/backend behavior
+- Result: Passed
+- Notes: Ran lint, typecheck, 35 Vitest tests, and build after updating `docs/index.md` to cover internal App Server transport, account auth endpoints/scopes, and new backend configuration.

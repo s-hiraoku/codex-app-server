@@ -8,6 +8,8 @@ import { sanitizePublicText } from "../utils/sanitize.js";
 type TaskRow = {
   id: string;
   token_id: string;
+  provider: string;
+  backend: string;
   repo: string;
   mode: string;
   thread_id: string | null;
@@ -23,6 +25,8 @@ export function parseTaskRow(row: TaskRow): TaskRecord {
   return {
     id: row.id,
     tokenId: row.token_id,
+    provider: row.provider,
+    backend: row.backend,
     repo: row.repo,
     mode: row.mode,
     threadId: row.thread_id,
@@ -52,9 +56,9 @@ export async function createTask(
 
   db.prepare(
     `INSERT INTO tasks (
-      id, token_id, repo, mode, thread_id, status, summary, changed_files_json, error, created_at, completed_at
+      id, token_id, provider, backend, repo, mode, thread_id, status, summary, changed_files_json, error, created_at, completed_at
     ) VALUES (
-      @id, @tokenId, @repo, @mode, NULL, 'pending', '', '[]', NULL, @createdAt, NULL
+      @id, @tokenId, 'codex', 'app-server', @repo, @mode, NULL, 'pending', '', '[]', NULL, @createdAt, NULL
     )`
   ).run({
     id,
@@ -75,6 +79,8 @@ export async function createTask(
     db.prepare(
       `UPDATE tasks
        SET thread_id = @threadId,
+           provider = @provider,
+           backend = @backend,
            status = 'completed',
            summary = @summary,
            changed_files_json = @changedFilesJson,
@@ -83,6 +89,8 @@ export async function createTask(
     ).run({
       id,
       threadId: result.threadId,
+      provider: result.provider,
+      backend: result.backend,
       summary: sanitizePublicText(result.summary),
       changedFilesJson: JSON.stringify(result.changedFiles),
       completedAt
