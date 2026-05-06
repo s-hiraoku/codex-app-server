@@ -20,4 +20,13 @@ describe("config", () => {
       })
     ).toThrow();
   });
+
+  it("rejects missing repo allowlist in production", () => {
+    expect(() =>
+      loadConfig({
+        NODE_ENV: "production",
+        TOKEN_PEPPER: "production-secret"
+      })
+    ).toThrow();
+  });
 });

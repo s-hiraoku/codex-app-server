@@ -4,7 +4,6 @@ This directory contains the repository-managed Codex harness for `codex-app-serv
 
 The source harness repository is:
 
-- `/Volumes/SSD/ghq/github.com/s-hiraoku/codex-harnesses`
 - <https://github.com/s-hiraoku/codex-harnesses>
 
 ## Layout

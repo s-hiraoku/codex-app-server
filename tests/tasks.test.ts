@@ -84,7 +84,7 @@ describe("tasks", () => {
   it("does not include local absolute paths in task responses", async () => {
     const runner = new FakeCodexRunner();
     runner.summary =
-      "Read /Volumes/SSD/ghq/github.com/s-hiraoku/codex-app-server/README.md, /home/runner/work/repo/file.ts, /workspace/app/secret, C:\\Users\\name\\secret.txt, \\\\server\\share\\secret.txt, and /Users/name/secret";
+      "Read /Users/name/project/README.md, /home/runner/work/repo/file.ts, /workspace/app/secret, C:\\Users\\name\\secret.txt, \\\\server\\share\\secret.txt, and /tmp/project/secret";
     const { app, db } = makeTestApp({ codexRunner: runner });
     const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
 
@@ -100,12 +100,12 @@ describe("tasks", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).not.toContain("/Volumes/SSD");
+    expect(response.body).not.toContain("/Users/name");
     expect(response.body).not.toContain("/home/runner");
     expect(response.body).not.toContain("/workspace/app");
     expect(response.body).not.toContain("C:\\Users");
     expect(response.body).not.toContain("\\\\server\\share");
-    expect(response.body).not.toContain("/Users/");
+    expect(response.body).not.toContain("/tmp/project");
     expect(response.body).toContain("[redacted-path]");
   });
 
