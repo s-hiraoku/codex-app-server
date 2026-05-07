@@ -152,3 +152,10 @@ Use this file to record meaningful verification runs.
 - Scope: Documentation coverage for Codex App Server account/backend behavior
 - Result: Passed
 - Notes: Ran lint, typecheck, 35 Vitest tests, and build after updating `docs/index.md` to cover internal App Server transport, account auth endpoints/scopes, and new backend configuration.
+
+### 2026-05-07 09:04
+
+- Command: `scripts/verify.sh`
+- Scope: MVP async task flow, CI workflow, GitHub Pages guide, and codex-harnesses import
+- Result: Passed
+- Notes: Ran lint, typecheck, 37 Vitest tests, and build after changing task creation to return `202 Accepted` with background execution and polling.

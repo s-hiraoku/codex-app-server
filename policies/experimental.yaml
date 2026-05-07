@@ -1,0 +1,20 @@
+mode:
+  approval: on-request
+  sandbox: workspace-write
+
+guards:
+  block_secrets: true
+  block_dangerous_commands: true
+  require_verification_on_stop: true
+
+verification:
+  require_lint: false
+  require_typecheck: false
+  require_tests: false
+  require_build: false
+
+git:
+  allow_force_push: false
+  allow_reset_hard: false
+  prefer_worktree: true
+

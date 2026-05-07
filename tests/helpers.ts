@@ -22,6 +22,7 @@ export class FakeCodexRunner implements CodexRunner {
   calls: Array<{ prompt: string; cwd: string; mode: string }> = [];
   summary = "task completed";
   changedFiles: string[] = [];
+  error: Error | null = null;
 
   async runTask(params: {
     prompt: string;
@@ -30,6 +31,9 @@ export class FakeCodexRunner implements CodexRunner {
     mode: "read-only" | "workspace-write";
   }): Promise<CodexTaskResult> {
     this.calls.push(params);
+    if (this.error) {
+      throw this.error;
+    }
     return {
       provider: "codex",
       backend: "app-server",

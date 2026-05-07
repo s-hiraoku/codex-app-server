@@ -34,7 +34,7 @@ function taskResponse(task: NonNullable<ReturnType<typeof getTask>>) {
 }
 
 export async function taskRoutes(app: FastifyInstance, deps: { db: Db; codexRunner: CodexRunner }) {
-  app.post("/v1/tasks", async (request) => {
+  app.post("/v1/tasks", async (request, reply) => {
     request.audit = { ...request.audit, action: "tasks:create" };
 
     const body = createTaskSchema.parse(request.body);
@@ -54,7 +54,7 @@ export async function taskRoutes(app: FastifyInstance, deps: { db: Db; codexRunn
     const taskId = makeId("task");
     request.audit = { ...request.audit, taskId };
 
-    const task = await createTask(deps.db, deps.codexRunner, {
+    const task = createTask(deps.db, deps.codexRunner, {
       id: taskId,
       tokenId: request.auth.id,
       repoId: repo.id,
@@ -62,7 +62,7 @@ export async function taskRoutes(app: FastifyInstance, deps: { db: Db; codexRunn
       prompt: body.prompt,
       mode
     });
-    return taskResponse(task);
+    return reply.status(202).send(taskResponse(task));
   });
 
   app.get("/v1/tasks/:id", async (request) => {

@@ -114,7 +114,7 @@ Authenticated:
 - `POST /v1/codex/account/login/device-code` requires `codex:account:login`; starts ChatGPT device-code login and returns only `loginId`, `verificationUrl`, and `userCode`.
 - `POST /v1/codex/account/login/cancel` requires `codex:account:login`; cancels a pending device-code login by `loginId`.
 - `POST /v1/codex/account/logout` requires `codex:account:logout`; signs Codex out through App Server.
-- `POST /v1/tasks` requires `task:create`, `repo:<repoId>`, and `mode:<mode>`.
+- `POST /v1/tasks` requires `task:create`, `repo:<repoId>`, and `mode:<mode>`; returns `202 Accepted` with a Gateway `taskId`.
 - `GET /v1/tasks/:id` requires `task:read` and either task ownership or matching repo scope.
 
 Task example:
@@ -128,6 +128,13 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
     "prompt": "READMEを読んで改善案を出してください",
     "mode": "read-only"
   }'
+```
+
+Poll the Gateway task until it leaves `pending`:
+
+```bash
+curl http://127.0.0.1:8787/v1/tasks/task_... \
+  -H "Authorization: Bearer $CODEXGW_TOKEN"
 ```
 
 ## Security
@@ -157,6 +164,8 @@ Prefer publishing through Tailscale, Cloudflare Tunnel, or another identity-awar
 This repository has a project-local copy of selected files from [`s-hiraoku/codex-harnesses`](https://github.com/s-hiraoku/codex-harnesses):
 
 - `AGENTS.md`
+- `policies/default.yaml`
+- `policies/experimental.yaml`
 - `policies/strict.yaml`
 - `scripts/verify.sh`
 - `scripts/checkpoint.sh`
