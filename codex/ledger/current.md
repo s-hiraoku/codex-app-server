@@ -10,7 +10,7 @@
 ## Context
 
 - Repository: codex-app-server
-- Branch: main
+- Branch: codex/mvp-user-guide-harness
 - Related issue or PR:
 - Important files: AGENTS.md, package.json, src/, tests/, scripts/verify.sh, policies/strict.yaml
 
@@ -36,7 +36,7 @@
 
 ## Next Step
 
-- Open a draft PR for review.
+- Open a normal, review-ready PR for review.
 
 ## Checkpoints
 
