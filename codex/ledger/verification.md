@@ -180,3 +180,10 @@ Use this file to record meaningful verification runs.
 - Scope: Repository verification after MVP smoke docs update
 - Result: Passed
 - Notes: Ran lint, typecheck, 39 Vitest tests, and build.
+
+### 2026-05-07 20:10
+
+- Command: `npm run smoke && npm run lint && npm run typecheck && scripts/verify.sh`
+- Scope: Codex review feedback fix for smoke allowlist isolation
+- Result: Passed
+- Notes: Confirmed the smoke check seeds its own allowlist before importing app code; also passed with an unrelated `CODEXGW_ALLOWED_REPOS_JSON` already present in the environment.

@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import { buildApp } from "../src/app.js";
 import type { AppConfig } from "../src/config.js";
 import type {
   CodexAccountClient,
@@ -9,6 +8,13 @@ import type {
   DeviceCodeLogin
 } from "../src/codex/client.js";
 
+const smokeRepo = {
+  id: "codex-app-server",
+  path: process.cwd(),
+  defaultMode: "read-only",
+  allowedModes: ["read-only", "workspace-write"]
+};
+
 const config: AppConfig = {
   NODE_ENV: "development",
   PORT: 8787,
@@ -17,7 +23,7 @@ const config: AppConfig = {
   APP_BACKEND: "codex-app-server",
   CODEX_APP_SERVER_COMMAND: "codex",
   CODEX_APP_SERVER_TURN_TIMEOUT_MS: 1_000,
-  CODEXGW_ALLOWED_REPOS_JSON: undefined,
+  CODEXGW_ALLOWED_REPOS_JSON: JSON.stringify([smokeRepo]),
   TOKEN_PEPPER: "smoke-test-pepper",
   BOOTSTRAP_ADMIN_TOKEN: "smoke-bootstrap-token"
 };
@@ -80,6 +86,8 @@ async function waitForTask(app: FastifyInstance, token: string, taskId: string):
 }
 
 async function main(): Promise<void> {
+  process.env.CODEXGW_ALLOWED_REPOS_JSON = config.CODEXGW_ALLOWED_REPOS_JSON;
+  const { buildApp } = await import("../src/app.js");
   const app = buildApp({
     config,
     codexRunner: new SmokeCodexRunner(),
