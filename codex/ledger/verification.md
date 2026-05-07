@@ -166,3 +166,17 @@ Use this file to record meaningful verification runs.
 - Scope: PR #6 guardian review feedback
 - Result: Passed
 - Notes: Ran lint, typecheck, 39 Vitest tests, and build after allowing creating tokens to poll their own async tasks without broad `task:read`.
+
+### 2026-05-07 20:03
+
+- Command: `npm run lint && npm run typecheck && npm test && npm run build && npm run smoke`
+- Scope: MVP local API smoke check
+- Result: Passed
+- Notes: Added an in-process smoke check for health, bootstrap token creation, scoped repo listing, async task creation/polling, and internal thread ID non-exposure.
+
+### 2026-05-07 20:03
+
+- Command: `scripts/verify.sh`
+- Scope: Repository verification after MVP smoke docs update
+- Result: Passed
+- Notes: Ran lint, typecheck, 39 Vitest tests, and build.

@@ -52,6 +52,7 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+npm run smoke
 scripts/verify.sh
 ```
 
@@ -66,6 +67,14 @@ Health check:
 ```bash
 curl http://127.0.0.1:8787/healthz
 ```
+
+Smoke check the MVP API contract without connecting to a real Codex App Server:
+
+```bash
+npm run smoke
+```
+
+The smoke check uses an in-memory database and fake Codex runner to verify health, bootstrap token creation, scoped repo listing, task creation, task polling, and that public task responses do not expose internal Codex thread IDs.
 
 ## Bootstrap
 

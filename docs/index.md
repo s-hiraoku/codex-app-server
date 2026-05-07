@@ -85,6 +85,14 @@ npm run dev
 curl http://127.0.0.1:8787/healthz
 ```
 
+実 Codex 実行環境に接続せず、MVP の公開 API 契約だけを確認する場合は smoke check を実行します。
+
+```bash
+npm run smoke
+```
+
+この確認は in-memory database と fake Codex runner を使い、health check、初回トークン作成、スコープ付きリポジトリ一覧、タスク作成、タスク polling、内部 Codex thread ID を公開しないことを検証します。
+
 ## 初回トークン作成
 
 初回だけ `BOOTSTRAP_ADMIN_TOKEN` を使って管理用 API トークンを作成します。このトークンに `token:*` スコープを含めておくと、`BOOTSTRAP_ADMIN_TOKEN` を削除した後も通常のトークン管理 API を使えます。
