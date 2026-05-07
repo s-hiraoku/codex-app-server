@@ -196,6 +196,8 @@ curl -X POST http://127.0.0.1:8787/v1/codex/account/logout \
 
 タスク作成には `task:create`、`repo:<repoId>`、`mode:<mode>` が必要です。`mode` を省略すると、サーバー側で定義された対象リポジトリの既定モードが使われます。
 
+`POST /v1/tasks` は Codex の実行完了を待たず、`202 Accepted` と Gateway の `taskId` を返します。外部ツールはこの `taskId` を保存し、`GET /v1/tasks/:id` を polling して `completed` または `failed` を確認します。
+
 ```bash
 curl -X POST http://127.0.0.1:8787/v1/tasks \
   -H "Authorization: Bearer $CODEXGW_TOKEN" \
@@ -212,13 +214,13 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
 ```json
 {
   "taskId": "task_...",
-  "status": "completed",
+  "status": "pending",
   "repo": "codex-app-server",
   "mode": "read-only",
-  "summary": "task completed",
+  "summary": "",
   "changedFiles": [],
   "createdAt": "2026-05-05T00:00:00.000Z",
-  "completedAt": "2026-05-05T00:00:05.000Z",
+  "completedAt": null,
   "error": null
 }
 ```
@@ -227,7 +229,7 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
 
 ## タスク確認
 
-タスク確認には `task:read` が必要です。タスク作成者本人は自分のタスクを読めます。別トークンで読む場合は、対象タスクの `repo:<repoId>` スコープも必要です。
+タスク作成者本人は、`task:create` で作成した自分のタスクを `task:read` なしで確認できます。別トークンで読む場合は `task:read` と対象タスクの `repo:<repoId>` スコープが必要です。
 
 ```bash
 curl http://127.0.0.1:8787/v1/tasks/task_... \
@@ -235,6 +237,22 @@ curl http://127.0.0.1:8787/v1/tasks/task_... \
 ```
 
 完了後は `status`、`summary`、`changedFiles`、`completedAt`、`error` を確認します。
+
+完了レスポンス例:
+
+```json
+{
+  "taskId": "task_...",
+  "status": "completed",
+  "repo": "codex-app-server",
+  "mode": "read-only",
+  "summary": "task completed",
+  "changedFiles": ["README.md"],
+  "createdAt": "2026-05-05T00:00:00.000Z",
+  "completedAt": "2026-05-05T00:00:05.000Z",
+  "error": null
+}
+```
 
 ## トークン管理
 
@@ -307,6 +325,22 @@ curl -X DELETE http://127.0.0.1:8787/v1/tokens/tok_... \
 - `workspace-write` は必要なクライアントだけに付与する。
 - Codex アカウント操作スコープは管理者用トークンだけに付与する。
 - 監査ログとサーバーログに機密値が出ていないことを定期的に確認する。
+
+## Codex Harness
+
+このリポジトリには [`s-hiraoku/codex-harnesses`](https://github.com/s-hiraoku/codex-harnesses) から、プロジェクトローカルで使うハーネスを同梱しています。
+
+| パス | 用途 |
+| --- | --- |
+| `AGENTS.md` | Codex に渡すリポジトリ固有の作業ルール。 |
+| `policies/*.yaml` | strict/default/experimental の安全・検証ポリシー例。 |
+| `scripts/verify.sh` | lint/typecheck/test/build をまとめて実行する検証入口。 |
+| `scripts/checkpoint.sh` | `codex/ledger/current.md` へ作業チェックポイントを追記する補助スクリプト。 |
+| `codex/skills/` | bug fix、feature、review、release check などの再利用ワークフロー。 |
+| `codex/hooks/` | secret guard、dangerous command guard、stop verify のサンプルhook。 |
+| `codex/ledger/` | 長期作業の判断・リスク・検証ログ。 |
+
+hook payload はサンプルです。Codex の lifecycle hook として使う場合は、対象環境に合わせて確認してから登録してください。
 
 ## GitHub Pages で公開する
 

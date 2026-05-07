@@ -17,7 +17,7 @@ describe("authorization", () => {
       }
     });
 
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode).toBe(202);
   });
 
   it("rejects task create without task:create", async () => {

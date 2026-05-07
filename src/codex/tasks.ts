@@ -39,7 +39,7 @@ export function parseTaskRow(row: TaskRow): TaskRecord {
   };
 }
 
-export async function createTask(
+export function createTask(
   db: Db,
   runner: CodexRunner,
   params: {
@@ -50,7 +50,21 @@ export async function createTask(
     mode: TaskMode;
     id?: string;
   }
-): Promise<TaskRecord> {
+): TaskRecord {
+  const task = createPendingTask(db, params);
+  void runTask(db, runner, task.id, params);
+  return task;
+}
+
+function createPendingTask(
+  db: Db,
+  params: {
+    tokenId: string;
+    repoId: string;
+    mode: TaskMode;
+    id?: string;
+  }
+): TaskRecord {
   const id = params.id ?? makeId("task");
   const createdAt = nowIso();
 
@@ -68,6 +82,19 @@ export async function createTask(
     createdAt
   });
 
+  return getTask(db, id) as TaskRecord;
+}
+
+async function runTask(
+  db: Db,
+  runner: CodexRunner,
+  id: string,
+  params: {
+    cwd: string;
+    prompt: string;
+    mode: TaskMode;
+  }
+): Promise<void> {
   try {
     const result = await runner.runTask({
       prompt: params.prompt,
@@ -108,10 +135,7 @@ export async function createTask(
       error: error instanceof Error ? sanitizePublicText(error.message) : "Task failed",
       completedAt
     });
-    throw error;
   }
-
-  return getTask(db, id) as TaskRecord;
 }
 
 export function getTask(db: Db, id: string): TaskRecord | null {

@@ -55,7 +55,7 @@ describe("policy", () => {
       }
     });
 
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode).toBe(202);
     expect(response.json().mode).toBe("read-only");
   });
 
