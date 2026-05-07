@@ -157,4 +157,57 @@ describe("tasks", () => {
     expect(task.error).toContain("[redacted-path]");
     expect(task.error).not.toContain("/Users/name");
   });
+
+  it("allows a creator without task:read to poll its own task", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Read README",
+        mode: "read-only"
+      }
+    });
+
+    expect(createResponse.statusCode).toBe(202);
+
+    const readResponse = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${createResponse.json().taskId as string}`,
+      headers: authHeader(token.token)
+    });
+
+    expect(readResponse.statusCode).toBe(200);
+  });
+
+  it("rejects non-owners without task:read when reading a task", async () => {
+    const { app, db } = makeTestApp();
+    const owner = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const other = issueToken(db, ["repo:codex-app-server", "mode:read-only"], { name: "other-token" });
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(owner.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Read README",
+        mode: "read-only"
+      }
+    });
+
+    expect(createResponse.statusCode).toBe(202);
+
+    const readResponse = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${createResponse.json().taskId as string}`,
+      headers: authHeader(other.token)
+    });
+
+    expect(readResponse.statusCode).toBe(403);
+  });
 });

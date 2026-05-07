@@ -29,11 +29,10 @@ export function authorizeTaskCreate(request: FastifyRequest, repoId: string, req
 }
 
 export function authorizeTaskRead(request: FastifyRequest, task: { tokenId: string; repo: string }): void {
-  requireScopes(request, ["task:read"]);
-
   if (request.auth?.id === task.tokenId) {
     return;
   }
 
+  requireScopes(request, ["task:read"]);
   requireScopes(request, [`repo:${task.repo}`]);
 }

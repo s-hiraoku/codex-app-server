@@ -229,7 +229,7 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
 
 ## タスク確認
 
-タスク確認には `task:read` が必要です。タスク作成者本人は自分のタスクを読めます。別トークンで読む場合は、対象タスクの `repo:<repoId>` スコープも必要です。
+タスク作成者本人は、`task:create` で作成した自分のタスクを `task:read` なしで確認できます。別トークンで読む場合は `task:read` と対象タスクの `repo:<repoId>` スコープが必要です。
 
 ```bash
 curl http://127.0.0.1:8787/v1/tasks/task_... \
