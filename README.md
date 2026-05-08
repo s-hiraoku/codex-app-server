@@ -170,7 +170,7 @@ curl http://127.0.0.1:8787/v1/tasks/task_... \
 
 ## Client Integration
 
-External client integration is documented in [`docs/CLIENT_INTEGRATION.md`](docs/CLIENT_INTEGRATION.md), [`docs/EVENT_STREAMING.md`](docs/EVENT_STREAMING.md), and [`docs/WORKSPACE_TARGETS.md`](docs/WORKSPACE_TARGETS.md). The Gateway exposes sanitized task events for clients such as CLI tools, dashboards, desktop apps, mobile apps, automation bots, MCP integrations, and CI helpers:
+External client integration is documented in [`docs/CLIENT_INTEGRATION.md`](docs/CLIENT_INTEGRATION.md), [`docs/EVENT_STREAMING.md`](docs/EVENT_STREAMING.md), [`docs/WORKSPACE_TARGETS.md`](docs/WORKSPACE_TARGETS.md), and [`docs/TASK_CONTROL.md`](docs/TASK_CONTROL.md). The Gateway exposes sanitized task events for clients such as CLI tools, dashboards, desktop apps, mobile apps, automation bots, MCP integrations, and CI helpers:
 
 ```bash
 curl http://127.0.0.1:8787/v1/tasks/task_.../events \

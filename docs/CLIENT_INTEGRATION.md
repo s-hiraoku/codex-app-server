@@ -67,6 +67,8 @@ These APIs are suitable future additions if they preserve the same security mode
 
 `interrupt` and `steer` require active task session management. The current runner waits for completion inside one `runTask()` call, so these endpoints should not be implemented until active session handles can be retained safely.
 
+See [`TASK_CONTROL.md`](TASK_CONTROL.md) for the guardrails and required session model.
+
 ## APIs Not To Implement
 
 Do not add:
