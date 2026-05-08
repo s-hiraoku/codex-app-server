@@ -187,3 +187,10 @@ Use this file to record meaningful verification runs.
 - Scope: Codex review feedback fix for smoke allowlist isolation
 - Result: Passed
 - Notes: Confirmed the smoke check seeds its own allowlist before importing app code; also passed with an unrelated `CODEXGW_ALLOWED_REPOS_JSON` already present in the environment.
+
+### 2026-05-08 21:45
+
+- Command: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run smoke`, `scripts/verify.sh`
+- Scope: Workspace target guardrails
+- Result: Passed
+- Notes: Added regression coverage for rejecting workspace target request fields and keeping `/v1/workspaces` endpoints absent until a server-side registry exists.
