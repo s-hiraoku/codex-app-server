@@ -125,6 +125,7 @@ Authenticated:
 - `POST /v1/codex/account/logout` requires `codex:account:logout`; signs Codex out through App Server.
 - `POST /v1/tasks` requires `task:create`, `repo:<repoId>`, and `mode:<mode>`; returns `202 Accepted` with a Gateway `taskId`.
 - `GET /v1/tasks/:id` allows the creating token to read its own task; other tokens require `task:read` and matching repo scope.
+- `GET /v1/tasks/:id/events` requires the same authorization as `GET /v1/tasks/:id`; replays sanitized task events as Server-Sent Events.
 
 Task example:
 
@@ -165,6 +166,18 @@ curl http://127.0.0.1:8787/v1/tasks/task_... \
 - The gateway does not expose a generic App Server JSON-RPC proxy, App Server filesystem APIs, command APIs, or `thread/shellCommand`.
 - OpenAI API keys and ChatGPT access tokens are not accepted through public Gateway request bodies.
 - Public task responses expose Gateway `taskId` only, not Codex thread IDs.
+
+## Client Integration
+
+External client integration is documented in [`docs/CLIENT_INTEGRATION.md`](docs/CLIENT_INTEGRATION.md), [`docs/EVENT_STREAMING.md`](docs/EVENT_STREAMING.md), and [`docs/WORKSPACE_TARGETS.md`](docs/WORKSPACE_TARGETS.md). The Gateway exposes sanitized task events for clients such as CLI tools, dashboards, desktop apps, mobile apps, automation bots, MCP integrations, and CI helpers:
+
+```bash
+curl http://127.0.0.1:8787/v1/tasks/task_.../events \
+  -H "Authorization: Bearer $CODEXGW_TOKEN" \
+  -H "Accept: text/event-stream"
+```
+
+Events use Gateway task IDs and normalized event types only. Raw `cwd`, Codex thread IDs, App Server JSON-RPC payloads, and shell commands are not exposed.
 
 Prefer publishing through Tailscale, Cloudflare Tunnel, or another identity-aware private access layer. Opening a home Mac port directly to the internet is not recommended.
 

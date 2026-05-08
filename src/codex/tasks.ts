@@ -4,6 +4,7 @@ import type { CodexRunner } from "./client.js";
 import type { TaskMode } from "../policy/modes.js";
 import { makeId, nowIso } from "../utils/ids.js";
 import { sanitizePublicText } from "../utils/sanitize.js";
+import { appendTaskEvent } from "./task-events.js";
 
 type TaskRow = {
   id: string;
@@ -81,6 +82,7 @@ function createPendingTask(
     mode: params.mode,
     createdAt
   });
+  appendTaskEvent(db, id, { type: "task.started", payload: { repo: params.repoId, mode: params.mode } });
 
   return getTask(db, id) as TaskRecord;
 }
@@ -95,13 +97,35 @@ async function runTask(
     mode: TaskMode;
   }
 ): Promise<void> {
+  let sawAgentMessage = false;
+  let sawDiffUpdate = false;
+
   try {
     const result = await runner.runTask({
       prompt: params.prompt,
       cwd: params.cwd,
-      mode: params.mode
+      mode: params.mode,
+      onEvent: (event) => {
+        if (event.type === "agent.message.completed") {
+          sawAgentMessage = true;
+        }
+        if (event.type === "diff.available") {
+          sawDiffUpdate = true;
+        }
+        appendTaskEvent(db, id, event);
+      }
     });
     const completedAt = nowIso();
+    if (!sawAgentMessage) {
+      appendTaskEvent(db, id, {
+        type: "agent.message.completed",
+        payload: { text: result.summary, phase: "final_answer" }
+      });
+    }
+    if (!sawDiffUpdate && result.changedFiles.length > 0) {
+      appendTaskEvent(db, id, { type: "diff.available", payload: { changedFiles: result.changedFiles } });
+    }
+    appendTaskEvent(db, id, { type: "task.completed", payload: { summary: result.summary } });
 
     db.prepare(
       `UPDATE tasks
@@ -124,6 +148,11 @@ async function runTask(
     });
   } catch (error) {
     const completedAt = nowIso();
+    const publicError = error instanceof Error ? sanitizePublicText(error.message) : "Task failed";
+    appendTaskEvent(db, id, {
+      type: "task.failed",
+      payload: { error: publicError }
+    });
     db.prepare(
       `UPDATE tasks
        SET status = 'failed',
@@ -132,7 +161,7 @@ async function runTask(
        WHERE id = @id`
     ).run({
       id,
-      error: error instanceof Error ? sanitizePublicText(error.message) : "Task failed",
+      error: publicError,
       completedAt
     });
   }

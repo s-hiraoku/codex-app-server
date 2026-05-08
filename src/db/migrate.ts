@@ -39,6 +39,18 @@ export function migrate(db: Db): void {
     CREATE INDEX IF NOT EXISTS idx_tasks_repo
       ON tasks(repo);
 
+    CREATE TABLE IF NOT EXISTS task_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      task_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      payload_json TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(task_id) REFERENCES tasks(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_task_events_task_id_id
+      ON task_events(task_id, id);
+
     CREATE TABLE IF NOT EXISTS audit_logs (
       id TEXT PRIMARY KEY,
       timestamp TEXT NOT NULL,

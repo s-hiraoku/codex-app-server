@@ -1,0 +1,81 @@
+# Workspace Targets
+
+Workspace targets are a future server-side abstraction for selecting where a task runs without exposing raw filesystem paths to public clients.
+
+This design is intentionally client-neutral. A workspace target can be used by a CLI tool, web dashboard, desktop app, automation bot, MCP integration, CI helper, or other developer tool.
+
+## Goals
+
+- Keep public APIs free of raw `cwd` values and arbitrary absolute paths.
+- Allow external clients to reference task targets by opaque IDs.
+- Preserve repo allowlist, token scope, sandbox mode, audit, and path scrubbing.
+- Support future diff artifacts, task control, and task resume flows.
+
+## Proposed Model
+
+Introduce opaque IDs:
+
+- `workspaceId`: a stable registered workspace target.
+- `targetId`: an optional task-specific target derived from a workspace.
+
+The Gateway stores the internal absolute path server-side. Clients pass only opaque IDs.
+
+Every stored path must validate against one of:
+
+- an allowlisted repo root; or
+- an explicitly configured allowlisted workspace root.
+
+The Gateway must reject:
+
+- public absolute paths;
+- relative paths that escape a registered root;
+- symlink-resolved paths outside allowed roots;
+- targets whose repo scope does not match the caller's token;
+- targets whose requested task mode exceeds repo or target policy.
+
+## API Sketch
+
+No workspace target API is implemented in G1. A future version could add:
+
+```text
+GET /v1/workspaces
+POST /v1/workspaces
+GET /v1/workspaces/:workspaceId
+POST /v1/tasks
+```
+
+`POST /v1/tasks` could accept either the current `repo` field or a future `workspaceId`, but never a raw path.
+
+## Diff Artifact Design
+
+Candidate endpoint:
+
+```text
+GET /v1/tasks/:id/diff
+```
+
+Authorization should match `GET /v1/tasks/:id`.
+
+If implemented, diff generation should:
+
+- use fixed git operations only;
+- use server-side target paths only;
+- return repo-relative file paths;
+- scrub public text for absolute paths;
+- never accept arbitrary command arguments;
+- never expose raw `cwd`.
+
+The response should be a generic task artifact, not editor-specific UI state.
+
+## Interrupt And Steer Design
+
+Candidate endpoints:
+
+```text
+POST /v1/tasks/:id/interrupt
+POST /v1/tasks/:id/steer
+```
+
+These should be generic task control APIs. They require an active task session registry because the current runner owns the App Server transport until `runTask()` finishes and then closes isolated stdio transports.
+
+Do not implement these endpoints until the Gateway can safely retain and authorize active session handles.

@@ -210,4 +210,174 @@ describe("tasks", () => {
 
     expect(readResponse.statusCode).toBe(403);
   });
+
+  it("records append-only task lifecycle events", async () => {
+    const runner = new FakeCodexRunner();
+    runner.changedFiles = ["README.md"];
+    const { app, db } = makeTestApp({ codexRunner: runner });
+    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:workspace-write"]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Change README",
+        mode: "workspace-write"
+      }
+    });
+
+    expect(response.statusCode).toBe(202);
+    const taskId = response.json().taskId as string;
+    await waitForTask(app, token.token, taskId);
+
+    const rows = db.prepare("SELECT * FROM task_events WHERE task_id = ? ORDER BY id ASC").all(taskId) as Array<{
+      type: string;
+      payload_json: string;
+    }>;
+
+    expect(rows.map((row) => row.type)).toEqual([
+      "task.started",
+      "agent.message.completed",
+      "diff.available",
+      "task.completed"
+    ]);
+    expect(JSON.parse(rows[2]?.payload_json ?? "{}")).toEqual({ changedFiles: ["README.md"] });
+  });
+
+  it("records failed task events with sanitized public payloads", async () => {
+    const runner = new FakeCodexRunner();
+    runner.error = new Error("failed in /Users/name/project/secret.txt");
+    const { app, db } = makeTestApp({ codexRunner: runner });
+    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Fail",
+        mode: "read-only"
+      }
+    });
+
+    expect(response.statusCode).toBe(202);
+    await waitForTask(app, token.token, response.json().taskId as string);
+    const rows = db.prepare("SELECT type, payload_json FROM task_events ORDER BY id ASC").all() as Array<{
+      type: string;
+      payload_json: string;
+    }>;
+
+    expect(rows.map((row) => row.type)).toEqual(["task.started", "task.failed"]);
+    expect(rows[1]?.payload_json).not.toContain("/Users/name");
+    expect(rows[1]?.payload_json).toContain("[redacted-path]");
+  });
+
+  it("replays task events as authorized SSE without internal ids or raw cwd", async () => {
+    const runner = new FakeCodexRunner();
+    runner.summary = "Read /Volumes/SSD/secret/repo/file.ts";
+    const { app, db } = makeTestApp({ codexRunner: runner });
+    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Read README",
+        mode: "read-only"
+      }
+    });
+    const taskId = created.json().taskId as string;
+    await waitForTask(app, token.token, taskId);
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${taskId}/events`,
+      headers: authHeader(token.token)
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["content-type"]).toContain("text/event-stream");
+    expect(response.body).toContain("event: task.started");
+    expect(response.body).toContain("event: task.completed");
+    expect(response.body).toContain(`"taskId":"${taskId}"`);
+    expect(response.body).not.toContain("thr_test");
+    expect(response.body).not.toContain("/Volumes/SSD");
+    const call = runner.calls[0];
+    expect(call).toBeDefined();
+    if (!call) {
+      throw new Error("Fake runner was not called");
+    }
+    expect(call.cwd).toBeDefined();
+    expect(response.body).not.toContain(call.cwd);
+    expect(response.body).toContain("[redacted-path]");
+  });
+
+  it("supports Last-Event-ID for completed task event replay", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Read README",
+        mode: "read-only"
+      }
+    });
+    const taskId = created.json().taskId as string;
+    await waitForTask(app, token.token, taskId);
+    const firstEvent = db.prepare("SELECT id FROM task_events WHERE task_id = ? ORDER BY id ASC LIMIT 1").get(taskId) as {
+      id: number;
+    };
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${taskId}/events`,
+      headers: { ...authHeader(token.token), "last-event-id": String(firstEvent.id) }
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).not.toContain(`id: ${firstEvent.id}\n`);
+    expect(response.body).toContain("event: task.completed");
+  });
+
+  it("requires task read authorization for task events", async () => {
+    const { app, db } = makeTestApp();
+    const owner = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const other = issueToken(db, ["task:read"]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(owner.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Read README",
+        mode: "read-only"
+      }
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${created.json().taskId}`,
+      headers: authHeader(other.token)
+    });
+
+    expect(response.statusCode).toBe(403);
+
+    const eventsResponse = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${created.json().taskId}/events`,
+      headers: authHeader(other.token)
+    });
+
+    expect(eventsResponse.statusCode).toBe(403);
+  });
 });

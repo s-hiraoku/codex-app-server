@@ -262,6 +262,20 @@ curl http://127.0.0.1:8787/v1/tasks/task_... \
 }
 ```
 
+## タスクイベント
+
+CLI tool、Web dashboard、desktop app、mobile app、automation bot、MCP integration、CI helper などの外部クライアントは、Gateway の task event を Server-Sent Events として取得できます。認可は `GET /v1/tasks/:id` と同じで、タスク作成者本人、または `task:read` と対象 repo scope を持つトークンだけが読めます。
+
+```bash
+curl http://127.0.0.1:8787/v1/tasks/task_.../events \
+  -H "Authorization: Bearer $CODEXGW_TOKEN" \
+  -H "Accept: text/event-stream"
+```
+
+イベントは正規化済みの `task.started`、`agent.message.completed`、`file.changed`、`diff.available`、`task.completed`、`task.failed` などです。レスポンスには Gateway `taskId` だけを含め、Codex 内部 thread ID、raw `cwd`、App Server の raw JSON-RPC payload は含めません。再取得時は `Last-Event-ID` header を指定すると、そのIDより後のイベントだけを取得できます。
+
+外部クライアント統合の設計方針は [`CLIENT_INTEGRATION.md`](CLIENT_INTEGRATION.md)、event stream の詳細は [`EVENT_STREAMING.md`](EVENT_STREAMING.md)、workspace target の将来設計は [`WORKSPACE_TARGETS.md`](WORKSPACE_TARGETS.md) を参照してください。
+
 ## トークン管理
 
 トークン作成:

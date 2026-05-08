@@ -26,6 +26,27 @@ export type TaskRecord = {
   completedAt: string | null;
 };
 
+export type TaskEventType =
+  | "task.started"
+  | "task.completed"
+  | "task.failed"
+  | "agent.message.delta"
+  | "agent.message.completed"
+  | "tool.started"
+  | "tool.completed"
+  | "file.changed"
+  | "diff.available"
+  | "approval.requested"
+  | "approval.resolved";
+
+export type TaskEventRecord = {
+  id: number;
+  taskId: string;
+  type: TaskEventType;
+  payload: Record<string, unknown>;
+  createdAt: string;
+};
+
 export type AuditLogRecord = {
   id: string;
   timestamp: string;

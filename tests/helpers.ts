@@ -4,6 +4,7 @@ import { migrate } from "../src/db/migrate.js";
 import { createApiToken } from "../src/auth/token.js";
 import type { AppConfig } from "../src/config.js";
 import type { CodexAccountClient, CodexAccountState, CodexRunner, CodexTaskResult, DeviceCodeLogin } from "../src/codex/client.js";
+import type { NewTaskEvent } from "../src/codex/task-events.js";
 
 export const TEST_CONFIG: AppConfig = {
   NODE_ENV: "test",
@@ -29,6 +30,7 @@ export class FakeCodexRunner implements CodexRunner {
     cwd: string;
     threadId?: string;
     mode: "read-only" | "workspace-write";
+    onEvent?: (event: NewTaskEvent) => void | Promise<void>;
   }): Promise<CodexTaskResult> {
     this.calls.push(params);
     if (this.error) {
