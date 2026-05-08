@@ -285,7 +285,7 @@ curl http://127.0.0.1:8787/v1/tasks/task_.../diff \
 
 レスポンスは Gateway `taskId`、repo ID、status、repo-relative `changedFiles`、scrub済み `patch`、`truncated`、artifact `createdAt` を返します。Codex内部thread IDやraw `cwd`は含めません。`/diff` はrequest時のlive worktreeを読みません。
 
-外部クライアント統合の設計方針は [`CLIENT_INTEGRATION.md`](CLIENT_INTEGRATION.md)、event stream の詳細は [`EVENT_STREAMING.md`](EVENT_STREAMING.md)、workspace target の将来設計は [`WORKSPACE_TARGETS.md`](WORKSPACE_TARGETS.md) を参照してください。
+外部クライアント統合の設計方針は [`CLIENT_INTEGRATION.md`](CLIENT_INTEGRATION.md)、event stream の詳細は [`EVENT_STREAMING.md`](EVENT_STREAMING.md)、workspace target の将来設計は [`WORKSPACE_TARGETS.md`](WORKSPACE_TARGETS.md)、task control のguardrailは [`TASK_CONTROL.md`](TASK_CONTROL.md) を参照してください。
 
 ## トークン管理
 

@@ -530,4 +530,43 @@ describe("tasks", () => {
     });
     expect(otherResponse.statusCode).toBe(403);
   });
+
+  it("does not expose task interrupt or steer endpoints before active session support exists", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Read README",
+        mode: "read-only"
+      }
+    });
+    expect(created.statusCode).toBe(202);
+    const taskId = created.json().taskId as unknown;
+    expect(taskId).toEqual(expect.any(String));
+    expect(taskId).not.toBe("");
+
+    const interruptResponse = await app.inject({
+      method: "POST",
+      url: `/v1/tasks/${taskId as string}/interrupt`,
+      headers: authHeader(token.token),
+      payload: {}
+    });
+
+    const steerResponse = await app.inject({
+      method: "POST",
+      url: `/v1/tasks/${taskId as string}/steer`,
+      headers: authHeader(token.token),
+      payload: {
+        message: "Please adjust course"
+      }
+    });
+
+    expect(interruptResponse.statusCode).toBe(404);
+    expect(steerResponse.statusCode).toBe(404);
+  });
 });
