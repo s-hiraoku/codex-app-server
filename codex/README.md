@@ -29,6 +29,8 @@ During the task, append checkpoints:
 scripts/checkpoint.sh
 ```
 
+When creating or substantially revising a project-local skill, run the `skill-quality-gate` workflow. It uses `empirical-prompt-tuning` to evaluate the skill with fresh executor agents, then records the result in `codex/ledger/skill-evaluations.md`.
+
 Before finalizing meaningful changes, run:
 
 ```bash

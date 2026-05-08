@@ -194,3 +194,10 @@ Use this file to record meaningful verification runs.
 - Scope: Workspace target guardrails
 - Result: Passed
 - Notes: Added regression coverage for rejecting workspace target request fields and keeping `/v1/workspaces` endpoints absent until a server-side registry exists.
+
+### 2026-05-09 07:20
+
+- Command: `bash scripts/verify.sh`
+- Scope: Agent extension docs and project-local skill quality gate harness
+- Result: Passed
+- Notes: Ran lint, typecheck, 51 Vitest tests, and build after adding `empirical-prompt-tuning`, `skill-quality-gate`, skill evaluation ledger docs, and self-report-only metric capture fallback.

@@ -93,6 +93,110 @@ npm run smoke
 
 この確認は in-memory database と fake Codex runner を使い、health check、初回トークン作成、スコープ付きリポジトリ一覧、タスク作成、タスク polling、内部 Codex thread ID を公開しないことを検証します。
 
+## エージェント拡張のインストール方法
+
+このリポジトリの Gateway API とは別に、Codex、Claude Code、GitHub Copilot などのエージェントへ skill、plugin、MCP 設定を追加する場合は、配布元と実行内容を確認してから導入してください。skill や plugin はローカルファイル、hooks、MCP server、外部コマンドを含むことがあり、信頼できない配布元の導入は避けます。
+
+### APM
+
+[APM](https://microsoft.github.io/apm/) は `apm.yml` と lockfile でエージェント設定を管理する Agent Package Manager です。チームで同じ skill、prompt、agent、hook、plugin、MCP 設定を再現したい場合に向いています。
+
+APM CLI をインストールします。
+
+```bash
+curl -sSL https://aka.ms/apm-unix | sh
+apm --version
+```
+
+プロジェクトで package を追加します。
+
+```bash
+apm install microsoft/apm-sample-package
+apm install anthropics/skills/skills/frontend-design
+```
+
+`apm.yml` と `apm.lock.yaml` は review 対象として commit します。Codex や Gemini のように compile された instructions を使うツールでは、必要に応じて `apm compile` でネイティブ設定を生成します。
+
+```bash
+apm install
+apm compile
+```
+
+### GitHub CLI `gh skill`
+
+GitHub CLI の `gh skill` は、GitHub 上の Agent Skills を検索、preview、install、update、publish するための方法です。GitHub repository からの配布を前提にし、pinning や provenance を重視する場合に向いています。
+
+GitHub CLI を v2.90.0 以上に更新し、必要に応じて認証します。
+
+```bash
+gh --version
+gh auth login
+```
+
+skill を確認してからインストールします。
+
+```bash
+gh skill search code-review
+gh skill preview owner/repo skill-name
+gh skill install owner/repo skill-name --agent codex
+```
+
+再現性が必要な場合は release tag や commit SHA に pin します。
+
+```bash
+gh skill install owner/repo skill-name --agent codex --pin v1.0.0
+gh skill update --all
+```
+
+### `npx skills`
+
+`npx skills` は Node.js の `npx` 経由で Agent Skills を追加する方法です。複数エージェントを横断して手軽に導入したい場合や、GitHub 以外の配布形態を扱いたい場合に使います。
+
+```bash
+npx skills add owner/repo
+```
+
+特定の skill だけを入れる場合は、配布元の README に従って skill 名を指定します。
+
+```bash
+npx skills add owner/repo skill-name
+```
+
+`npx` は実行時に package を取得して実行するため、CI やチーム運用では package manager の lock、バージョン固定、導入前 review を組み合わせてください。
+
+### Anthropic 公式 Claude Code plugins
+
+Claude Code の公式 plugin 機能は、Claude Code 内の `/plugin` コマンドで marketplace を追加し、plugin をインストールします。公式 Anthropic marketplace は `claude-plugins-official` として利用できます。
+
+Claude Code 内で plugin manager を開きます。
+
+```text
+/plugin
+```
+
+公式 marketplace の plugin を直接インストールします。
+
+```text
+/plugin install github@claude-plugins-official
+/reload-plugins
+```
+
+公式 marketplace が見つからない、または古い場合は更新します。
+
+```text
+/plugin marketplace update claude-plugins-official
+```
+
+まだ登録されていない環境では marketplace を追加してから再試行します。
+
+```text
+/plugin marketplace add anthropics/claude-plugins-official
+/plugin install github@claude-plugins-official
+/reload-plugins
+```
+
+Anthropic 公式ドキュメントでは、plugin は skills、agents、hooks、MCP servers を含められる拡張機構として説明されています。インストール前に plugin の説明、homepage、必要な外部サービス認可、MCP server、hooks の内容を確認してください。
+
 ## 初回トークン作成
 
 初回だけ `BOOTSTRAP_ADMIN_TOKEN` を使って管理用 API トークンを作成します。このトークンに `token:*` スコープを含めておくと、`BOOTSTRAP_ADMIN_TOKEN` を削除した後も通常のトークン管理 API を使えます。
@@ -369,11 +473,13 @@ curl -X DELETE http://127.0.0.1:8787/v1/tokens/tok_... \
 | `policies/*.yaml` | strict/default/experimental の安全・検証ポリシー例。 |
 | `scripts/verify.sh` | lint/typecheck/test/build をまとめて実行する検証入口。 |
 | `scripts/checkpoint.sh` | `codex/ledger/current.md` へ作業チェックポイントを追記する補助スクリプト。 |
-| `codex/skills/` | bug fix、feature、review、release check などの再利用ワークフロー。 |
+| `codex/skills/` | bug fix、feature、review、release check、skill-quality-gate などの再利用ワークフロー。 |
 | `codex/hooks/` | secret guard、dangerous command guard、stop verify のサンプルhook。 |
-| `codex/ledger/` | 長期作業の判断・リスク・検証ログ。 |
+| `codex/ledger/` | 長期作業の判断・リスク・検証ログ。skill 評価は `codex/ledger/skill-evaluations.md` に記録します。 |
 
 hook payload はサンプルです。Codex の lifecycle hook として使う場合は、対象環境に合わせて確認してから登録してください。
+
+project-local skill を新規作成または大幅改訂した場合は、`skill-quality-gate` workflow を使います。この workflow は `empirical-prompt-tuning` に従って別 executor agent で skill を評価し、自己レビューだけで合格扱いしないための品質ゲートです。
 
 ## GitHub Pages で公開する
 

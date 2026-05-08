@@ -13,6 +13,7 @@ This repository is a personal Codex Gateway API server. Treat it as security-sen
 - Do not store full prompts in audit logs.
 - Preserve public API behavior unless a breaking change is explicitly requested.
 - Update docs when behavior, commands, configuration, security policy, or API shape changes.
+- When creating or substantially revising a project-local skill under `codex/skills/`, run the `skill-quality-gate` workflow and record the result in `codex/ledger/skill-evaluations.md`.
 
 ## Harness
 
@@ -21,6 +22,7 @@ Project-local harness files live under `codex/`:
 - `codex/skills/`: reusable workflows copied from `codex-harnesses`
 - `codex/hooks/`: example hook payloads, not automatically enforced
 - `codex/ledger/`: long-running task state and verification notes
+- `codex/ledger/skill-evaluations.md`: empirical skill evaluation records
 - `policies/strict.yaml`: human-readable safety and verification policy
 - `scripts/verify.sh`: repository verification entrypoint
 - `scripts/checkpoint.sh`: checkpoint appender for `codex/ledger/current.md`
