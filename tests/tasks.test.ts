@@ -380,4 +380,80 @@ describe("tasks", () => {
 
     expect(eventsResponse.statusCode).toBe(403);
   });
+
+  it("returns an authorized task diff artifact without internal ids or raw cwd", async () => {
+    const runner = new FakeCodexRunner();
+    runner.changedFiles = ["README.md", "/Users/name/project/secret.txt", "../outside.txt"];
+    const { app, db } = makeTestApp({ codexRunner: runner });
+    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:workspace-write"]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Change README",
+        mode: "workspace-write"
+      }
+    });
+    const taskId = created.json().taskId as string;
+    await waitForTask(app, token.token, taskId);
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${taskId}/diff`,
+      headers: authHeader(token.token)
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      taskId,
+      repo: "codex-app-server",
+      status: "completed",
+      changedFiles: ["README.md"],
+      truncated: false
+    });
+    expect(response.json().threadId).toBeUndefined();
+    expect(JSON.stringify(response.json())).not.toContain("thr_test");
+    expect(JSON.stringify(response.json())).not.toContain("/Users/name");
+    const call = runner.calls[0];
+    expect(call).toBeDefined();
+    if (!call) {
+      throw new Error("Fake runner was not called");
+    }
+    expect(JSON.stringify(response.json())).not.toContain(call.cwd);
+  });
+
+  it("requires task read authorization for task diff artifacts", async () => {
+    const { app, db } = makeTestApp();
+    const owner = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const other = issueToken(db, ["task:read"]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(owner.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Read README",
+        mode: "read-only"
+      }
+    });
+    const taskId = created.json().taskId as string;
+
+    const ownerResponse = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${taskId}/diff`,
+      headers: authHeader(owner.token)
+    });
+    expect(ownerResponse.statusCode).toBe(200);
+
+    const otherResponse = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${taskId}/diff`,
+      headers: authHeader(other.token)
+    });
+    expect(otherResponse.statusCode).toBe(403);
+  });
 });

@@ -126,6 +126,7 @@ Authenticated:
 - `POST /v1/tasks` requires `task:create`, `repo:<repoId>`, and `mode:<mode>`; returns `202 Accepted` with a Gateway `taskId`.
 - `GET /v1/tasks/:id` allows the creating token to read its own task; other tokens require `task:read` and matching repo scope.
 - `GET /v1/tasks/:id/events` requires the same authorization as `GET /v1/tasks/:id`; replays sanitized task events as Server-Sent Events.
+- `GET /v1/tasks/:id/diff` requires the same authorization as `GET /v1/tasks/:id`; returns a sanitized generic diff artifact using fixed git arguments and repo-relative paths.
 
 Task example:
 
@@ -177,7 +178,14 @@ curl http://127.0.0.1:8787/v1/tasks/task_.../events \
   -H "Accept: text/event-stream"
 ```
 
-Events use Gateway task IDs and normalized event types only. Raw `cwd`, Codex thread IDs, App Server JSON-RPC payloads, and shell commands are not exposed.
+Diff artifacts are also available for clients that need a generic review surface:
+
+```bash
+curl http://127.0.0.1:8787/v1/tasks/task_.../diff \
+  -H "Authorization: Bearer $CODEXGW_TOKEN"
+```
+
+Events and diff artifacts use Gateway task IDs and repo-relative paths only. Raw `cwd`, Codex thread IDs, App Server JSON-RPC payloads, and shell commands are not exposed.
 
 Prefer publishing through Tailscale, Cloudflare Tunnel, or another identity-aware private access layer. Opening a home Mac port directly to the internet is not recommended.
 

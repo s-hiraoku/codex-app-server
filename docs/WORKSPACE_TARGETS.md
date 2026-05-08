@@ -48,7 +48,7 @@ POST /v1/tasks
 
 ## Diff Artifact Design
 
-Candidate endpoint:
+Implemented endpoint:
 
 ```text
 GET /v1/tasks/:id/diff
@@ -56,7 +56,7 @@ GET /v1/tasks/:id/diff
 
 Authorization should match `GET /v1/tasks/:id`.
 
-If implemented, diff generation should:
+Diff generation:
 
 - use fixed git operations only;
 - use server-side target paths only;
