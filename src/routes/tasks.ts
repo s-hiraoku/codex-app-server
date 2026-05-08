@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Db } from "../db/connection.js";
 import type { CodexRunner } from "../codex/client.js";
 import { createTask, getTask } from "../codex/tasks.js";
+import { listTaskEvents, publicTaskEvent } from "../codex/task-events.js";
 import { authorizeTaskCreate, authorizeTaskRead } from "../policy/task-policy.js";
 import { ApiError } from "../utils/errors.js";
 import { hashPrompt } from "../auth/hash.js";
@@ -65,6 +66,27 @@ export async function taskRoutes(app: FastifyInstance, deps: { db: Db; codexRunn
     return reply.status(202).send(taskResponse(task));
   });
 
+  app.get("/v1/tasks/:id/events", async (request, reply) => {
+    request.audit = { ...request.audit, action: "tasks:events:read" };
+    const params = z.object({ id: z.string().min(1) }).parse(request.params);
+    const lastEventId = parseLastEventId(request.headers["last-event-id"]);
+    const task = getTask(deps.db, params.id);
+    if (!task) {
+      throw new ApiError("NOT_FOUND");
+    }
+
+    request.audit = { ...request.audit, repo: task.repo, mode: task.mode, taskId: task.id };
+    authorizeTaskRead(request, task);
+
+    const events = listTaskEvents(deps.db, task.id, lastEventId);
+    const body = events.map((event) => formatSseEvent(publicTaskEvent(task.id, event))).join("");
+    return reply
+      .header("cache-control", "no-cache")
+      .header("connection", "keep-alive")
+      .type("text/event-stream; charset=utf-8")
+      .send(body);
+  });
+
   app.get("/v1/tasks/:id", async (request) => {
     request.audit = { ...request.audit, action: "tasks:read" };
     const params = z.object({ id: z.string().min(1) }).parse(request.params);
@@ -78,4 +100,17 @@ export async function taskRoutes(app: FastifyInstance, deps: { db: Db; codexRunn
 
     return taskResponse(task);
   });
+}
+
+function parseLastEventId(value: string | string[] | undefined): number | undefined {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) {
+    return undefined;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function formatSseEvent(event: ReturnType<typeof publicTaskEvent>): string {
+  return `id: ${event.id}\nevent: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`;
 }

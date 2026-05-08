@@ -1,5 +1,6 @@
 import { relative, resolve, sep } from "node:path";
 import type { AppConfig } from "../config.js";
+import type { NewTaskEvent } from "./task-events.js";
 import type { TaskMode } from "../policy/modes.js";
 import type { TaskRunner, TaskRunResult } from "../provider/task-runner.js";
 import { ApiError } from "../utils/errors.js";
@@ -121,6 +122,7 @@ export class CodexAppServerClient implements TaskRunner, CodexAccountClient {
     cwd: string;
     threadId?: string;
     mode: TaskMode;
+    onEvent?: (event: NewTaskEvent) => void | Promise<void>;
   }): Promise<TaskRunResult> {
     const transport = this.configuredTransport ?? this.createTransport();
     try {
@@ -150,6 +152,7 @@ export class CodexAppServerClient implements TaskRunner, CodexAccountClient {
       cwd: string;
       threadId?: string;
       mode: TaskMode;
+      onEvent?: (event: NewTaskEvent) => void | Promise<void>;
     }
   ): Promise<TaskRunResult> {
     const threadResult = params.threadId
@@ -183,7 +186,7 @@ export class CodexAppServerClient implements TaskRunner, CodexAccountClient {
       throw new ApiError("CODEX_EXECUTION_FAILED", "Codex app-server did not return a turn id");
     }
 
-    const collected = await this.collectTurn(transport, params.cwd, turnId);
+    const collected = await this.collectTurn(transport, params.cwd, turnId, params.onEvent);
     return {
       provider: "codex",
       backend: "app-server",
@@ -219,7 +222,8 @@ export class CodexAppServerClient implements TaskRunner, CodexAccountClient {
   private async collectTurn(
     transport: JsonRpcTransport,
     repoRoot: string,
-    turnId: string
+    turnId: string,
+    onEvent?: (event: NewTaskEvent) => void | Promise<void>
   ): Promise<{ summary: string; changedFiles: string[] }> {
     const changedFiles = new Set<string>();
     let finalSummary = "";
@@ -235,6 +239,10 @@ export class CodexAppServerClient implements TaskRunner, CodexAccountClient {
         const item = (notification.params as ItemCompletedParams | undefined)?.item;
         if (item?.type === "agentMessage" && typeof item.text === "string") {
           latestSummary = item.text;
+          await onEvent?.({
+            type: "agent.message.completed",
+            payload: { text: item.text, phase: item.phase ?? null }
+          });
           if (item.phase === "final_answer") {
             finalSummary = item.text;
           }
@@ -247,8 +255,10 @@ export class CodexAppServerClient implements TaskRunner, CodexAccountClient {
             const safePath = assertInsideRepo(change.path, repoRoot);
             if (safePath) {
               changedFiles.add(safePath);
+              await onEvent?.({ type: "file.changed", payload: { path: safePath } });
             }
           }
+          await onEvent?.({ type: "diff.available", payload: { changedFiles: [...changedFiles].sort() } });
         }
       }
 

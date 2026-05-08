@@ -1,4 +1,5 @@
 import type { TaskMode } from "../policy/modes.js";
+import type { NewTaskEvent } from "../codex/task-events.js";
 
 export type TaskRunResult = {
   provider: "codex";
@@ -14,5 +15,6 @@ export interface TaskRunner {
     cwd: string;
     threadId?: string;
     mode: TaskMode;
+    onEvent?: (event: NewTaskEvent) => void | Promise<void>;
   }): Promise<TaskRunResult>;
 }
