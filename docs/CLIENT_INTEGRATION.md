@@ -45,15 +45,25 @@ Implemented in G1:
 
 The existing task polling response remains unchanged.
 
+## Diff Artifacts
+
+Implemented after G1:
+
+- `GET /v1/tasks/:id/diff` returns a generic task artifact for external clients that need to inspect changed files.
+- Authorization matches `GET /v1/tasks/:id`: the creating token can read its own task; other tokens require `task:read` and `repo:<task.repo>`.
+- The server resolves the allowlisted repo path internally and captures the artifact when the task completes.
+- Patch capture uses only fixed git arguments with literal pathspec handling.
+- `GET /v1/tasks/:id/diff` returns the stored artifact and does not inspect the live worktree at request time.
+- Public responses contain Gateway `taskId`, repo ID, task status, repo-relative `changedFiles`, sanitized `patch`, a `truncated` flag, and artifact `createdAt`.
+
+Clients cannot pass raw paths, shell commands, git arguments, or workspace roots to this endpoint.
+
 ## Candidate Future APIs
 
 These APIs are suitable future additions if they preserve the same security model:
 
-- `GET /v1/tasks/:id/diff`
 - `POST /v1/tasks/:id/interrupt`
 - `POST /v1/tasks/:id/steer`
-
-`GET /v1/tasks/:id/diff` should expose a sanitized task artifact, not editor-specific state. If implemented, it should use fixed git operations only and return repo-relative paths.
 
 `interrupt` and `steer` require active task session management. The current runner waits for completion inside one `runTask()` call, so these endpoints should not be implemented until active session handles can be retained safely.
 

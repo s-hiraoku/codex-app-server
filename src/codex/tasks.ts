@@ -5,6 +5,7 @@ import type { TaskMode } from "../policy/modes.js";
 import { makeId, nowIso } from "../utils/ids.js";
 import { sanitizePublicText } from "../utils/sanitize.js";
 import { appendTaskEvent } from "./task-events.js";
+import { captureTaskDiffArtifact } from "./diff-artifacts.js";
 
 type TaskRow = {
   id: string;
@@ -92,6 +93,7 @@ async function runTask(
   runner: CodexRunner,
   id: string,
   params: {
+    repoId: string;
     cwd: string;
     prompt: string;
     mode: TaskMode;
@@ -125,6 +127,7 @@ async function runTask(
     if (!sawDiffUpdate && result.changedFiles.length > 0) {
       appendTaskEvent(db, id, { type: "diff.available", payload: { changedFiles: result.changedFiles } });
     }
+    await captureTaskDiffArtifact(db, { taskId: id, repoId: params.repoId, changedFiles: result.changedFiles });
     appendTaskEvent(db, id, { type: "task.completed", payload: { summary: result.summary } });
 
     db.prepare(

@@ -4,6 +4,7 @@ import type { Db } from "../db/connection.js";
 import type { CodexRunner } from "../codex/client.js";
 import { createTask, getTask } from "../codex/tasks.js";
 import { listTaskEvents, publicTaskEvent } from "../codex/task-events.js";
+import { getTaskDiffArtifact } from "../codex/diff-artifacts.js";
 import { authorizeTaskCreate, authorizeTaskRead } from "../policy/task-policy.js";
 import { ApiError } from "../utils/errors.js";
 import { hashPrompt } from "../auth/hash.js";
@@ -85,6 +86,20 @@ export async function taskRoutes(app: FastifyInstance, deps: { db: Db; codexRunn
       .header("connection", "keep-alive")
       .type("text/event-stream; charset=utf-8")
       .send(body);
+  });
+
+  app.get("/v1/tasks/:id/diff", async (request) => {
+    request.audit = { ...request.audit, action: "tasks:diff:read" };
+    const params = z.object({ id: z.string().min(1) }).parse(request.params);
+    const task = getTask(deps.db, params.id);
+    if (!task) {
+      throw new ApiError("NOT_FOUND");
+    }
+
+    request.audit = { ...request.audit, repo: task.repo, mode: task.mode, taskId: task.id };
+    authorizeTaskRead(request, task);
+
+    return getTaskDiffArtifact(deps.db, task);
   });
 
   app.get("/v1/tasks/:id", async (request) => {
