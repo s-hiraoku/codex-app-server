@@ -545,18 +545,21 @@ describe("tasks", () => {
         mode: "read-only"
       }
     });
-    const taskId = created.json().taskId as string;
+    expect(created.statusCode).toBe(202);
+    const taskId = created.json().taskId as unknown;
+    expect(taskId).toEqual(expect.any(String));
+    expect(taskId).not.toBe("");
 
     const interruptResponse = await app.inject({
       method: "POST",
-      url: `/v1/tasks/${taskId}/interrupt`,
+      url: `/v1/tasks/${taskId as string}/interrupt`,
       headers: authHeader(token.token),
       payload: {}
     });
 
     const steerResponse = await app.inject({
       method: "POST",
-      url: `/v1/tasks/${taskId}/steer`,
+      url: `/v1/tasks/${taskId as string}/steer`,
       headers: authHeader(token.token),
       payload: {
         message: "Please adjust course"
