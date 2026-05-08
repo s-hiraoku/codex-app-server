@@ -51,8 +51,10 @@ Implemented after G1:
 
 - `GET /v1/tasks/:id/diff` returns a generic task artifact for external clients that need to inspect changed files.
 - Authorization matches `GET /v1/tasks/:id`: the creating token can read its own task; other tokens require `task:read` and `repo:<task.repo>`.
-- The server resolves the allowlisted repo path internally and runs only fixed git arguments.
-- Public responses contain Gateway `taskId`, repo ID, task status, repo-relative `changedFiles`, sanitized `patch`, and a `truncated` flag.
+- The server resolves the allowlisted repo path internally and captures the artifact when the task completes.
+- Patch capture uses only fixed git arguments with literal pathspec handling.
+- `GET /v1/tasks/:id/diff` returns the stored artifact and does not inspect the live worktree at request time.
+- Public responses contain Gateway `taskId`, repo ID, task status, repo-relative `changedFiles`, sanitized `patch`, a `truncated` flag, and artifact `createdAt`.
 
 Clients cannot pass raw paths, shell commands, git arguments, or workspace roots to this endpoint.
 

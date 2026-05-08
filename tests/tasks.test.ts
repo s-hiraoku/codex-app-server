@@ -425,6 +425,80 @@ describe("tasks", () => {
     expect(JSON.stringify(response.json())).not.toContain(call.cwd);
   });
 
+  it("treats diff artifact changed files as literal paths", async () => {
+    const runner = new FakeCodexRunner();
+    runner.changedFiles = [":(glob)**/*.ts"];
+    const { app, db } = makeTestApp({ codexRunner: runner });
+    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:workspace-write"]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Change unusual file",
+        mode: "workspace-write"
+      }
+    });
+    const taskId = created.json().taskId as string;
+    await waitForTask(app, token.token, taskId);
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${taskId}/diff`,
+      headers: authHeader(token.token)
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      taskId,
+      changedFiles: [":(glob)**/*.ts"],
+      patch: ""
+    });
+    expect(JSON.stringify(response.json())).not.toContain("src/codex/diff-artifacts.ts");
+  });
+
+  it("serves stored diff artifacts instead of reading the live task row at request time", async () => {
+    const runner = new FakeCodexRunner();
+    runner.changedFiles = ["README.md"];
+    const { app, db } = makeTestApp({ codexRunner: runner });
+    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:workspace-write"]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        prompt: "Change README",
+        mode: "workspace-write"
+      }
+    });
+    const taskId = created.json().taskId as string;
+    await waitForTask(app, token.token, taskId);
+
+    db.prepare(
+      `UPDATE task_diff_artifacts
+       SET changed_files_json = ?, patch = ?, truncated = 0
+       WHERE task_id = ?`
+    ).run(JSON.stringify(["README.md"]), "stored patch snapshot", taskId);
+    db.prepare("UPDATE tasks SET changed_files_json = ? WHERE id = ?").run(JSON.stringify(["docs/index.md"]), taskId);
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/v1/tasks/${taskId}/diff`,
+      headers: authHeader(token.token)
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      taskId,
+      changedFiles: ["README.md"],
+      patch: "stored patch snapshot"
+    });
+  });
+
   it("requires task read authorization for task diff artifacts", async () => {
     const { app, db } = makeTestApp();
     const owner = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);

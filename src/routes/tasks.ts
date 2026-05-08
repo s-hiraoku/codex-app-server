@@ -99,7 +99,7 @@ export async function taskRoutes(app: FastifyInstance, deps: { db: Db; codexRunn
     request.audit = { ...request.audit, repo: task.repo, mode: task.mode, taskId: task.id };
     authorizeTaskRead(request, task);
 
-    return getTaskDiffArtifact(task);
+    return getTaskDiffArtifact(deps.db, task);
   });
 
   app.get("/v1/tasks/:id", async (request) => {

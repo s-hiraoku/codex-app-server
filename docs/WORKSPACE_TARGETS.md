@@ -56,10 +56,13 @@ GET /v1/tasks/:id/diff
 
 Authorization should match `GET /v1/tasks/:id`.
 
-Diff generation:
+Diff artifact capture:
 
 - use fixed git operations only;
 - use server-side target paths only;
+- treat changed file pathspecs as literal paths;
+- store the artifact when the task completes;
+- never inspect the live worktree while serving `GET /v1/tasks/:id/diff`;
 - return repo-relative file paths;
 - scrub public text for absolute paths;
 - never accept arbitrary command arguments;

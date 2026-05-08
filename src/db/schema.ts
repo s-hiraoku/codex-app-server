@@ -47,6 +47,14 @@ export type TaskEventRecord = {
   createdAt: string;
 };
 
+export type TaskDiffArtifactRecord = {
+  taskId: string;
+  changedFiles: string[];
+  patch: string;
+  truncated: boolean;
+  createdAt: string;
+};
+
 export type AuditLogRecord = {
   id: string;
   timestamp: string;
