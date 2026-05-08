@@ -79,7 +79,7 @@ export async function taskRoutes(app: FastifyInstance, deps: { db: Db; codexRunn
     authorizeTaskRead(request, task);
 
     const events = listTaskEvents(deps.db, task.id, lastEventId);
-    const body = events.map((event) => formatSseEvent(publicTaskEvent(task.id, event))).join("");
+    const body = `retry: 2000\n\n${events.map((event) => formatSseEvent(publicTaskEvent(task.id, event))).join("")}`;
     return reply
       .header("cache-control", "no-cache")
       .header("connection", "keep-alive")

@@ -307,7 +307,13 @@ describe("tasks", () => {
     expect(response.body).toContain(`"taskId":"${taskId}"`);
     expect(response.body).not.toContain("thr_test");
     expect(response.body).not.toContain("/Volumes/SSD");
-    expect(response.body).not.toContain(runner.calls[0]?.cwd);
+    const call = runner.calls[0];
+    expect(call).toBeDefined();
+    if (!call) {
+      throw new Error("Fake runner was not called");
+    }
+    expect(call.cwd).toBeDefined();
+    expect(response.body).not.toContain(call.cwd);
     expect(response.body).toContain("[redacted-path]");
   });
 

@@ -10,11 +10,10 @@ GET /v1/tasks/:id/events
 
 Authorization matches `GET /v1/tasks/:id`:
 
-- `task:read` is always required.
-- The task creator can read the event stream.
-- Other tokens also need `repo:<task.repo>`.
+- The task creator can read its own event stream without `task:read`.
+- Other tokens require both `task:read` and `repo:<task.repo>`.
 
-The endpoint returns Server-Sent Events. The current implementation replays persisted events for completed or failed tasks and supports `Last-Event-ID`.
+The endpoint returns Server-Sent Events. The current implementation replays persisted events and supports `Last-Event-ID`. If the task is not terminal yet, the response may close after a point-in-time replay; clients should reconnect with the latest event ID to resume.
 
 ## SSE Format
 
@@ -91,5 +90,7 @@ curl http://127.0.0.1:8787/v1/tasks/task_.../events \
   -H "Accept: text/event-stream" \
   -H "Last-Event-ID: 12"
 ```
+
+Responses include a `retry: 2000` SSE directive so clients have a default reconnect interval. For non-terminal tasks, a closed connection means the client should reconnect with `Last-Event-ID` to catch up.
 
 Live fan-out can be added later by introducing an active task session registry and broadcasting runner callbacks to connected SSE clients. That should be a separate phase because it changes task lifecycle management.

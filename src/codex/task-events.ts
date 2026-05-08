@@ -67,7 +67,7 @@ function parseTaskEventRow(row: TaskEventRow): TaskEventRecord {
     id: row.id,
     taskId: row.task_id,
     type: row.type,
-    payload: sanitizePayload(JSON.parse(row.payload_json) as Record<string, unknown>),
+    payload: JSON.parse(row.payload_json) as Record<string, unknown>,
     createdAt: row.created_at
   };
 }
