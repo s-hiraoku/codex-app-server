@@ -58,6 +58,10 @@ Implemented after G1:
 
 Clients cannot pass raw paths, shell commands, git arguments, or workspace roots to this endpoint.
 
+## Workspace Targets
+
+Workspace targets remain design-only. `POST /v1/tasks` accepts the current `repo` field only; `workspaceId`, `workspacePath`, raw `cwd`, and other target shortcuts are rejected by strict validation. `/v1/workspaces` endpoints are absent until a server-side registry can resolve opaque IDs to allowlisted internal paths without exposing raw filesystem locations.
+
 ## Candidate Future APIs
 
 These APIs are suitable future additions if they preserve the same security model:

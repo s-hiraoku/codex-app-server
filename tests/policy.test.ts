@@ -41,6 +41,64 @@ describe("policy", () => {
     expect(response.json().error.code).toBe("VALIDATION_ERROR");
   });
 
+  it("does not accept workspace target fields before registry support exists", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+
+    const workspaceIdResponse = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        workspaceId: "ws_test",
+        prompt: "Summarize",
+        mode: "read-only"
+      }
+    });
+
+    const workspacePathResponse = await app.inject({
+      method: "POST",
+      url: "/v1/tasks",
+      headers: authHeader(token.token),
+      payload: {
+        repo: "codex-app-server",
+        workspacePath: "/tmp/other",
+        prompt: "Summarize",
+        mode: "read-only"
+      }
+    });
+
+    expect(workspaceIdResponse.statusCode).toBe(400);
+    expect(workspaceIdResponse.json().error.code).toBe("VALIDATION_ERROR");
+    expect(workspacePathResponse.statusCode).toBe(400);
+    expect(workspacePathResponse.json().error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("does not expose workspace registry endpoints before target policy exists", async () => {
+    const { app, db } = makeTestApp();
+    const token = issueToken(db, ["task:read", "repo:codex-app-server"]);
+
+    const listResponse = await app.inject({
+      method: "GET",
+      url: "/v1/workspaces",
+      headers: authHeader(token.token)
+    });
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/v1/workspaces",
+      headers: authHeader(token.token),
+      payload: {
+        path: "/tmp/other",
+        repo: "codex-app-server"
+      }
+    });
+
+    expect(listResponse.statusCode).toBe(404);
+    expect(createResponse.statusCode).toBe(404);
+  });
+
   it("uses read-only as the default mode", async () => {
     const { app, db } = makeTestApp();
     const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
