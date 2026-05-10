@@ -1,5 +1,5 @@
 {
-  "name": "codex-app-server",
+  "name": "local-agent-gateway",
   "version": "0.1.0",
   "private": true,
   "type": "module",

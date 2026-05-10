@@ -1,6 +1,6 @@
 # Project Codex Harness
 
-This directory contains the repository-managed Codex harness for `codex-app-server`.
+This directory contains the repository-managed Codex harness for `local-agent-gateway`.
 
 The source harness repository is:
 

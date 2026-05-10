@@ -23,14 +23,14 @@ describe("policy", () => {
 
   it("does not accept raw cwd on task creation", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         cwd: "/tmp/other",
         prompt: "Summarize",
         mode: "read-only"
@@ -43,14 +43,14 @@ describe("policy", () => {
 
   it("does not accept workspace target fields before registry support exists", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
 
     const workspaceIdResponse = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         workspaceId: "ws_test",
         prompt: "Summarize",
         mode: "read-only"
@@ -62,7 +62,7 @@ describe("policy", () => {
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         workspacePath: "/tmp/other",
         prompt: "Summarize",
         mode: "read-only"
@@ -77,7 +77,7 @@ describe("policy", () => {
 
   it("does not expose workspace registry endpoints before target policy exists", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:read", "repo:codex-app-server"]);
+    const token = issueToken(db, ["task:read", "repo:local-agent-gateway"]);
 
     const listResponse = await app.inject({
       method: "GET",
@@ -91,7 +91,7 @@ describe("policy", () => {
       headers: authHeader(token.token),
       payload: {
         path: "/tmp/other",
-        repo: "codex-app-server"
+        repo: "local-agent-gateway"
       }
     });
 
@@ -101,14 +101,14 @@ describe("policy", () => {
 
   it("uses read-only as the default mode", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Summarize"
       }
     });
@@ -119,14 +119,14 @@ describe("policy", () => {
 
   it("rejects danger-full-access", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Summarize",
         mode: "danger-full-access"
       }

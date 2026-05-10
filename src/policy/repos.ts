@@ -28,8 +28,8 @@ const repoConfigSchema = z.object({
 const allowedReposConfigSchema = z.array(repoConfigSchema).min(1);
 
 const DEFAULT_ALLOWED_REPOS = {
-  "codex-app-server": {
-    id: "codex-app-server",
+  "local-agent-gateway": {
+    id: "local-agent-gateway",
     path: process.cwd(),
     defaultMode: "read-only",
     allowedModes: ["read-only", "workspace-write"]

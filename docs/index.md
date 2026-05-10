@@ -1,6 +1,6 @@
-# Codex App Server User Guide
+# Local Agent Gateway User Guide
 
-Codex App Server は、外部ツールからローカルの Codex ワークフローへ安全に作業を委譲するための個人用 Gateway API です。
+Local Agent Gateway は、外部ツールからローカルの agent ワークフローへ安全に作業を委譲するための個人用 Gateway API です。
 
 このガイドは API 利用者と運用者向けです。Codex App Server 本体の JSON-RPC、ローカルファイルシステムの絶対パス、作業ディレクトリは公開 API に出さない前提で運用します。
 
@@ -65,8 +65,8 @@ cp .env.example .env
 ```json
 [
   {
-    "id": "codex-app-server",
-    "path": "/absolute/path/to/codex-app-server",
+    "id": "local-agent-gateway",
+    "path": "/absolute/path/to/local-agent-gateway",
     "defaultMode": "read-only",
     "allowedModes": ["read-only", "workspace-write"]
   }
@@ -112,7 +112,7 @@ curl -X POST http://127.0.0.1:8787/v1/tokens \
       "codex:account:read",
       "codex:account:login",
       "codex:account:logout",
-      "repo:codex-app-server",
+      "repo:local-agent-gateway",
       "mode:read-only",
       "mode:workspace-write"
     ],
@@ -159,7 +159,7 @@ curl http://127.0.0.1:8787/v1/repos \
 {
   "repos": [
     {
-      "id": "codex-app-server",
+      "id": "local-agent-gateway",
       "defaultMode": "read-only"
     }
   ]
@@ -211,7 +211,7 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
   -H "Authorization: Bearer $CODEXGW_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "repo": "codex-app-server",
+    "repo": "local-agent-gateway",
     "prompt": "READMEを読んで改善案を出してください",
     "mode": "read-only"
   }'
@@ -223,7 +223,7 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
 {
   "taskId": "task_...",
   "status": "pending",
-  "repo": "codex-app-server",
+  "repo": "local-agent-gateway",
   "mode": "read-only",
   "summary": "",
   "changedFiles": [],
@@ -252,7 +252,7 @@ curl http://127.0.0.1:8787/v1/tasks/task_... \
 {
   "taskId": "task_...",
   "status": "completed",
-  "repo": "codex-app-server",
+  "repo": "local-agent-gateway",
   "mode": "read-only",
   "summary": "task completed",
   "changedFiles": ["README.md"],
@@ -300,7 +300,7 @@ curl -X POST http://127.0.0.1:8787/v1/tokens \
     "scopes": [
       "task:create",
       "task:read",
-      "repo:codex-app-server",
+      "repo:local-agent-gateway",
       "mode:read-only"
     ],
     "expiresInDays": 30

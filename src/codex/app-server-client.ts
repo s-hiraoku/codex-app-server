@@ -209,7 +209,7 @@ export class CodexAppServerClient implements TaskRunner, CodexAccountClient {
     await this.safeRequest(transport, "initialize", {
       clientInfo: {
         name: "codex_app_server_gateway",
-        title: "Codex App Server Gateway",
+        title: "Local Agent Gateway",
         version: "0.1.0"
       },
       capabilities: {

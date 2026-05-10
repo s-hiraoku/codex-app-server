@@ -4,14 +4,14 @@ import { authHeader, issueToken, makeTestApp } from "./helpers.js";
 describe("authorization", () => {
   it("passes when required scopes are present", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Summarize README",
         mode: "read-only"
       }
@@ -22,14 +22,14 @@ describe("authorization", () => {
 
   it("rejects task create without task:create", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Summarize README",
         mode: "read-only"
       }
@@ -47,7 +47,7 @@ describe("authorization", () => {
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Summarize README",
         mode: "read-only"
       }
@@ -58,14 +58,14 @@ describe("authorization", () => {
 
   it("rejects workspace-write without workspace-write mode scope", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Implement a change",
         mode: "workspace-write"
       }

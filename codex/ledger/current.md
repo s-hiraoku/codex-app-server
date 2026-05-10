@@ -9,7 +9,7 @@
 
 ## Context
 
-- Repository: codex-app-server
+- Repository: local-agent-gateway
 - Branch: codex/mvp-user-guide-harness
 - Related issue or PR:
 - Important files: AGENTS.md, package.json, src/, tests/, scripts/verify.sh, policies/strict.yaml

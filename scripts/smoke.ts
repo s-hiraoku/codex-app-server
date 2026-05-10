@@ -9,7 +9,7 @@ import type {
 } from "../src/codex/client.js";
 
 const smokeRepo = {
-  id: "codex-app-server",
+  id: "local-agent-gateway",
   path: process.cwd(),
   defaultMode: "read-only",
   allowedModes: ["read-only", "workspace-write"]
@@ -107,7 +107,7 @@ async function main(): Promise<void> {
       },
       payload: {
         name: "smoke-client",
-        scopes: ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"],
+        scopes: ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"],
         expiresInDays: 1
       }
     });
@@ -123,7 +123,7 @@ async function main(): Promise<void> {
       headers: { authorization: `Bearer ${createdToken.token}` }
     });
     expectStatus(repos, 200, "GET /v1/repos");
-    if (!repos.body.includes("codex-app-server")) {
+    if (!repos.body.includes("local-agent-gateway")) {
       throw new Error("GET /v1/repos did not include the smoke repo");
     }
 
@@ -135,7 +135,7 @@ async function main(): Promise<void> {
         "content-type": "application/json"
       },
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Smoke check the Gateway task API",
         mode: "read-only"
       }

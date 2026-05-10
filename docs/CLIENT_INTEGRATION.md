@@ -1,6 +1,6 @@
 # Client Integration
 
-This project is a general Personal Codex Gateway API Server. It is for safely delegating work from external clients to local Codex workflows while keeping Codex App Server internals behind server-side policy.
+This project is a personal Local Agent Gateway API server. It is for safely delegating work from external clients to local agent workflows while keeping provider internals, including Codex App Server internals, behind server-side policy.
 
 External clients can include CLI tools, web dashboards, desktop apps, mobile apps, automation bots, MCP integrations, CI helpers, and other developer tools. This repository does not implement any of those clients.
 

@@ -22,14 +22,14 @@ describe("tasks", () => {
   it("accepts a read-only task and completes it in the background", async () => {
     const runner = new FakeCodexRunner();
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -38,7 +38,7 @@ describe("tasks", () => {
     expect(response.statusCode).toBe(202);
     expect(response.json()).toMatchObject({
       status: "pending",
-      repo: "codex-app-server",
+      repo: "local-agent-gateway",
       mode: "read-only"
     });
     expect(response.json().threadId).toBeUndefined();
@@ -54,14 +54,14 @@ describe("tasks", () => {
 
   it("rejects workspace-write when token lacks workspace-write scope", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Change README",
         mode: "workspace-write"
       }
@@ -72,7 +72,7 @@ describe("tasks", () => {
 
   it("creates an audit log for task creation without storing full prompt", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
     const prompt = "A".repeat(250);
 
     const response = await app.inject({
@@ -80,7 +80,7 @@ describe("tasks", () => {
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt,
         mode: "read-only"
       }
@@ -95,7 +95,7 @@ describe("tasks", () => {
       prompt_preview: string;
     };
 
-    expect(row.repo).toBe("codex-app-server");
+    expect(row.repo).toBe("local-agent-gateway");
     expect(row.mode).toBe("read-only");
     expect(row.status).toBe("success");
     expect(row.prompt_hash).toHaveLength(64);
@@ -108,14 +108,14 @@ describe("tasks", () => {
     runner.summary =
       "Read /Users/name/project/README.md, /home/runner/work/repo/file.ts, /workspace/app/secret, C:\\Users\\name\\secret.txt, \\\\server\\share\\secret.txt, and /tmp/project/secret";
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -136,14 +136,14 @@ describe("tasks", () => {
     const runner = new FakeCodexRunner();
     runner.error = new Error("failed at /Users/name/project/secret.txt");
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -160,14 +160,14 @@ describe("tasks", () => {
 
   it("allows a creator without task:read to poll its own task", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
 
     const createResponse = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -186,15 +186,15 @@ describe("tasks", () => {
 
   it("rejects non-owners without task:read when reading a task", async () => {
     const { app, db } = makeTestApp();
-    const owner = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
-    const other = issueToken(db, ["repo:codex-app-server", "mode:read-only"], { name: "other-token" });
+    const owner = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
+    const other = issueToken(db, ["repo:local-agent-gateway", "mode:read-only"], { name: "other-token" });
 
     const createResponse = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(owner.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -215,14 +215,14 @@ describe("tasks", () => {
     const runner = new FakeCodexRunner();
     runner.changedFiles = ["README.md"];
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:workspace-write"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:workspace-write"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Change README",
         mode: "workspace-write"
       }
@@ -250,14 +250,14 @@ describe("tasks", () => {
     const runner = new FakeCodexRunner();
     runner.error = new Error("failed in /Users/name/project/secret.txt");
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Fail",
         mode: "read-only"
       }
@@ -279,14 +279,14 @@ describe("tasks", () => {
     const runner = new FakeCodexRunner();
     runner.summary = "Read /Volumes/SSD/secret/repo/file.ts";
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
 
     const created = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -319,14 +319,14 @@ describe("tasks", () => {
 
   it("supports Last-Event-ID for completed task event replay", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
 
     const created = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -350,7 +350,7 @@ describe("tasks", () => {
 
   it("requires task read authorization for task events", async () => {
     const { app, db } = makeTestApp();
-    const owner = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const owner = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
     const other = issueToken(db, ["task:read"]);
 
     const created = await app.inject({
@@ -358,7 +358,7 @@ describe("tasks", () => {
       url: "/v1/tasks",
       headers: authHeader(owner.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -385,14 +385,14 @@ describe("tasks", () => {
     const runner = new FakeCodexRunner();
     runner.changedFiles = ["README.md", "/Users/name/project/secret.txt", "../outside.txt"];
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:workspace-write"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:workspace-write"]);
 
     const created = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Change README",
         mode: "workspace-write"
       }
@@ -409,7 +409,7 @@ describe("tasks", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       taskId,
-      repo: "codex-app-server",
+      repo: "local-agent-gateway",
       status: "completed",
       changedFiles: ["README.md"],
       truncated: false
@@ -429,14 +429,14 @@ describe("tasks", () => {
     const runner = new FakeCodexRunner();
     runner.changedFiles = [":(glob)**/*.ts"];
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:workspace-write"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:workspace-write"]);
 
     const created = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Change unusual file",
         mode: "workspace-write"
       }
@@ -463,14 +463,14 @@ describe("tasks", () => {
     const runner = new FakeCodexRunner();
     runner.changedFiles = ["README.md"];
     const { app, db } = makeTestApp({ codexRunner: runner });
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:workspace-write"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:workspace-write"]);
 
     const created = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Change README",
         mode: "workspace-write"
       }
@@ -501,7 +501,7 @@ describe("tasks", () => {
 
   it("requires task read authorization for task diff artifacts", async () => {
     const { app, db } = makeTestApp();
-    const owner = issueToken(db, ["task:create", "repo:codex-app-server", "mode:read-only"]);
+    const owner = issueToken(db, ["task:create", "repo:local-agent-gateway", "mode:read-only"]);
     const other = issueToken(db, ["task:read"]);
 
     const created = await app.inject({
@@ -509,7 +509,7 @@ describe("tasks", () => {
       url: "/v1/tasks",
       headers: authHeader(owner.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }
@@ -533,14 +533,14 @@ describe("tasks", () => {
 
   it("does not expose task interrupt or steer endpoints before active session support exists", async () => {
     const { app, db } = makeTestApp();
-    const token = issueToken(db, ["task:create", "task:read", "repo:codex-app-server", "mode:read-only"]);
+    const token = issueToken(db, ["task:create", "task:read", "repo:local-agent-gateway", "mode:read-only"]);
 
     const created = await app.inject({
       method: "POST",
       url: "/v1/tasks",
       headers: authHeader(token.token),
       payload: {
-        repo: "codex-app-server",
+        repo: "local-agent-gateway",
         prompt: "Read README",
         mode: "read-only"
       }

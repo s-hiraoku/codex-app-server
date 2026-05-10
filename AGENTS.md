@@ -1,6 +1,6 @@
-# codex-app-server Guidance
+# local-agent-gateway Guidance
 
-This repository is a personal Codex Gateway API server. Treat it as security-sensitive infrastructure.
+This repository is a personal Local Agent Gateway API server. Treat it as security-sensitive infrastructure.
 
 ## Core Rules
 

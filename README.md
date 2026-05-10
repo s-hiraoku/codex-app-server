@@ -1,6 +1,6 @@
-# codex-app-server
+# local-agent-gateway
 
-Personal Codex Gateway API Server for safely delegating work from external tools to local Codex workflows.
+Personal Local Agent Gateway API server for safely delegating work from external tools to local agent workflows.
 
 The gateway is the only HTTP API that should be exposed outside the machine. Codex App Server internals, repository paths, raw `cwd` values, and dangerous execution modes stay behind server-side policy.
 
@@ -37,8 +37,8 @@ Example repo allowlist:
 ```json
 [
   {
-    "id": "codex-app-server",
-    "path": "/absolute/path/to/codex-app-server",
+    "id": "local-agent-gateway",
+    "path": "/absolute/path/to/local-agent-gateway",
     "defaultMode": "read-only",
     "allowedModes": ["read-only", "workspace-write"]
   }
@@ -97,7 +97,7 @@ curl -X POST http://127.0.0.1:8787/v1/tokens \
       "codex:account:read",
       "codex:account:login",
       "codex:account:logout",
-      "repo:codex-app-server",
+      "repo:local-agent-gateway",
       "mode:read-only",
       "mode:workspace-write"
     ],
@@ -135,7 +135,7 @@ curl -X POST http://127.0.0.1:8787/v1/tasks \
   -H "Authorization: Bearer $CODEXGW_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "repo": "codex-app-server",
+    "repo": "local-agent-gateway",
     "prompt": "READMEを読んで改善案を出してください",
     "mode": "read-only"
   }'

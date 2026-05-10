@@ -5,7 +5,7 @@ const configSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(8787),
   HOST: z.string().default("127.0.0.1"),
-  DATABASE_PATH: z.string().default("./data/codex-app-server.sqlite"),
+  DATABASE_PATH: z.string().default("./data/local-agent-gateway.sqlite"),
   APP_BACKEND: z.enum(["codex-app-server"]).default("codex-app-server"),
   CODEX_APP_SERVER_COMMAND: z.string().min(1).default("codex"),
   CODEX_APP_SERVER_TURN_TIMEOUT_MS: z.coerce.number().int().positive().default(10 * 60 * 1000),
